@@ -1,5 +1,4 @@
-from dicts import (CITIES,
-                   CAR_SELLER,
+from dicts import (CAR_SELLER,
                    MOTO_SELLER,
                    BOOL_OPTIONS,
                    PRETTY_BOOL,

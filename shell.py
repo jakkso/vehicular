@@ -4,6 +4,7 @@ except ImportError:
     import readline
     gnureadline = readline
 import cmd
+import pickle
 import sys
 
 sys.modules['readline'] = gnureadline
@@ -39,8 +40,8 @@ class BaseShell(cmd.Cmd):
     help_XXX: Is called when user types help XXX.
     """
 
-    with open('city.txt') as file:
-        CITIES = file.read().split('\n')
+    with open('cities.p', 'rb') as file:
+        CITIES = [city for city in pickle.load(file)]
     VEHICLE_TYPES = 'motorcycle', 'cars/trucks'
     SELLER_TYPES = 'dealer', 'owner', 'both'
 
@@ -54,8 +55,9 @@ class BaseShell(cmd.Cmd):
         #  Boolean options
         self.has_images = False
         self.posted_today = False
-        self.crypto = False
+        self.crypto_okay = False
         self.nearby_areas = False
+        self.titles_only = False
         #  Open ended, numerical options
         self.zip_code = None
         self.distance_from_zip = None
@@ -82,7 +84,7 @@ class BaseShell(cmd.Cmd):
         :param line:
         :return:
         """
-        print('Exiting shell...')
+        print('Exiting...')
         return True
 
     def help_EOF(self) -> None:
@@ -140,6 +142,7 @@ class BaseShell(cmd.Cmd):
         """
         if vehicle_type in self.VEHICLE_TYPES:
             if vehicle_type == 'motorcycle':
+                # These search options aren't valid for motorcycle searches
                 self.cylinders = None
                 self.drive_train = None
                 self.cage_type = None
@@ -214,12 +217,12 @@ class BoolShell(BaseShell):
     This class extends BaseShell and adds methods to manage boolean options for the
     search.
     """
-    def do_has_images(self, arg) -> None:
+    def do_has_images(self, *args) -> None:
         """
         Toggles self.has_images
         """
-        print(f'Posts must have images: {not self.has_images}.')
         self.has_images = not self.has_images
+        print(f'Posts must have images: {self.has_images}.')
 
     def help_has_images(self) -> None:
         """
@@ -230,12 +233,12 @@ class BoolShell(BaseShell):
                 'Program prints the current status after it has been set.'
         help_message(initial_desc, usage, long_desc=None)
 
-    def do_posted_today(self, arg) -> None:
+    def do_posted_today(self, *args) -> None:
         """
         Toggles self.posted_today
         """
-        print(f'Posts must have been posted today: {not self.posted_today}')
         self.posted_today = not self.posted_today
+        print(f'Posts must have been posted today: {self.posted_today}.')
 
     def help_posted_today(self) -> None:
         """
@@ -246,21 +249,52 @@ class BoolShell(BaseShell):
                 'Program prints the current status after it has been set.'
         help_message(initial_desc, usage, long_desc=None)
 
-    def do_crypto(self, arg) -> None:
+    def do_crypto(self, *args) -> None:
         """
         Toggles self.crypto
         """
-        print(f'Posts must accept payment in cryptocurrency: {not self.crypto}')
-        self.crypto = not self.crypto
+        self.crypto_okay = not self.crypto_okay
+        print(f'Posts must accept payment in cryptocurrency: {self.crypto_okay}.')
 
     def help_crypto(self) -> None:
         """
         Prints crypto help message
         """
-        print('-' * 40)
-        print()
         initial_desc = 'Used to toggle cryptocurrency option'
         usage = 'Type `crypto` and press enter.', \
+                'Program prints the current status after it has been set.'
+        help_message(initial_desc, usage, long_desc=None)
+
+    def do_titles_only(self, *args) -> None:
+        """
+        Toggles self.titles_only
+        """
+        self.titles_only = not self.titles_only
+        print(f'Search titles only: {self.titles_only}')
+
+    def help_titles_only(self) -> None:
+        """
+        Prints titles_only help message
+        """
+        initial_desc = 'Used to toggle searching titles only'
+        usage = 'Type `titles_only` and press enter',\
+                'Program prints the current status after it has been set.'
+        help_message(initial_desc, usage, long_desc=None)
+
+    def do_nearby_areas(self, *args) -> None:
+        """
+        Toggles nearby area search option
+        """
+        self.nearby_areas = not self.nearby_areas
+        print(f'Search nearby areas: {self.nearby_areas}.')
+
+    def help_nearby_areas(self) -> None:
+        """
+        Prints help message for nearby areas
+        """
+        initial_desc = 'Used to toggle search nearby areas in addition' \
+                       'to the specified city'
+        usage = 'Type `nearby_areas` and press enter',\
                 'Program prints the current status after it has been set.'
         help_message(initial_desc, usage, long_desc=None)
 
@@ -311,7 +345,7 @@ class OpenEndedShell(BoolShell):
         try:
             price = int(price)
         except ValueError:
-            print(f'Invalid price: `{price}`')
+            print(f'Invalid price: `{price}`.')
             return
         self.min_price = price
         print(f'Min price set to: {self.min_price}.')
@@ -332,7 +366,7 @@ class OpenEndedShell(BoolShell):
         try:
             price = int(price)
         except ValueError:
-            print(f'Invalid price: `{price}`')
+            print(f'Invalid price: `{price}`.')
             return
         self.max_price = price
         print(f'Max price set to: {self.max_price}.')
@@ -353,7 +387,7 @@ class OpenEndedShell(BoolShell):
         try:
             miles = int(miles)
         except ValueError:
-            print(f'Invalid miles: `{miles}`')
+            print(f'Invalid miles: `{miles}`.')
             return
         self.min_miles = miles
         print(f'Minimum miles set to: {self.min_miles}.')
@@ -374,7 +408,7 @@ class OpenEndedShell(BoolShell):
         try:
             miles = int(miles)
         except ValueError:
-            print(f'Invalid miles: `{miles}`')
+            print(f'Invalid miles: `{miles}`.')
             return
         self.max_miles = miles
         print(f'Maximum miles set to: {self.max_miles}.')
@@ -395,7 +429,7 @@ class OpenEndedShell(BoolShell):
         try:
             year = int(year)
         except ValueError:
-            print(f'Invalid year: `{year}`')
+            print(f'Invalid year: `{year}`.')
             return
         self.max_year = year
         print(f'Maximum year set to: {self.max_year}.')
@@ -416,7 +450,7 @@ class OpenEndedShell(BoolShell):
         try:
             year = int(year)
         except ValueError:
-            print(f'Invalid year: `{year}`')
+            print(f'Invalid year: `{year}`.')
             return
         self.min_year = year
         print(f'Minimum year set to: {self.min_year}.')
@@ -488,8 +522,9 @@ class SpecificOptionsShell(OpenEndedShell):
         """
         if status in self.TITLE_STATUS:
             self.title_status = status
+            print(f'Title status set to: {self.title_status}')
         else:
-            print(f'Invalid title status: `{status}`')
+            print(f'Invalid title status: `{status}`.')
             self.help_title_status()
 
     def help_title_status(self) -> None:
@@ -523,9 +558,9 @@ class SpecificOptionsShell(OpenEndedShell):
         """
         if fuel in self.FUEL:
             self.fuel = fuel
-            print(f'Fuel set to {fuel}')
+            print(f'Fuel set to {fuel}.')
         else:
-            print(f'Invalid fuel `{fuel}`')
+            print(f'Invalid fuel `{fuel}`.')
             self.help_fuel()
 
     def help_fuel(self) -> None:
@@ -557,9 +592,9 @@ class SpecificOptionsShell(OpenEndedShell):
         """
         if color in self.COLOR:
             self.color = color
-            print(f'Color set to {color}')
+            print(f'Color set to {color}.')
         else:
-            print(f'Invalid color: `{color}`')
+            print(f'Invalid color: `{color}`.')
             self.help_color()
 
     def help_color(self) -> None:
@@ -593,9 +628,9 @@ class SpecificOptionsShell(OpenEndedShell):
         """
         if variant in self.TRANSMISSION:
             self.transmission = variant
-            print(f'Transmission set to {self.transmission}')
+            print(f'Transmission set to {self.transmission}.')
         else:
-            print(f'Invalid transmission: `{self.transmission}`')
+            print(f'Invalid transmission: `{self.transmission}`.')
             self.help_transmission()
 
     def help_transmission(self) -> None:
@@ -645,7 +680,7 @@ class Shell(SpecificOptionsShell):
             self.cylinders = count
             print(f'Set cylinders to {self.cylinders}.')
         else:
-            print(f'Invalid cylinder count: `{count}`')
+            print(f'Invalid cylinder count: `{count}`.')
             self.help_cylinders()
 
     def help_cylinders(self) -> None:
@@ -678,11 +713,11 @@ class Shell(SpecificOptionsShell):
         :return:
         """
         if self.vehicle_type != 'cars/trucks':
-            print('Set vehicle type to cars/trucks first')
+            print('Set vehicle type to cars/trucks first.')
             return
         if variant in self.DRIVE:
             self.drive_train = variant
-            print(f'Drive train set to : {self.drive_train}')
+            print(f'Drive train set to : `{self.drive_train}`.')
         else:
             print(f'Invalid variant: `{variant}`.')
             self.help_drive_train()
@@ -712,16 +747,14 @@ class Shell(SpecificOptionsShell):
 
     def do_type(self, variant: str) -> None:
         """
-
-        :param variant:
-        :return:
+        Allows user to specify type of car/truck
         """
         if self.vehicle_type != 'cars/trucks':
-            print('Set vehicle type to cars/trucks first')
+            print('Set vehicle type to cars/trucks first.')
             return
         if variant in self.SUBTYPES:
             self.cage_type = variant
-            print(f'Vehicle subtype set to {self.cage_type}.')
+            print(f'Vehicle subtype set to `{self.cage_type}`.')
         else:
             print(f'Invalid vehicle subtype: `{variant}`.')
             self.help_type()
@@ -752,7 +785,7 @@ class Shell(SpecificOptionsShell):
 
 def help_message(initial_desc: str, usage: list or tuple, long_desc: list or tuple) -> None:
     """
-    Used to simplify and standardize printing out help messages for various
+    Used to simplify and standardize printing out help messages for the various
     help_XXX methods
     :param initial_desc: Short usage description
     :param usage: usage example
