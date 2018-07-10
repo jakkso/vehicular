@@ -41,7 +41,8 @@ class BaseShell(cmd.Cmd):
     """
 
     with open('cities.p', 'rb') as file:
-        CITIES = [city for city in pickle.load(file)]
+        CITY_DICT = pickle.load(file)
+    CITIES = [city for city in CITY_DICT]
     VEHICLE_TYPES = 'motorcycle', 'cars/trucks'
     SELLER_TYPES = 'dealer', 'owner', 'both'
 
@@ -77,6 +78,7 @@ class BaseShell(cmd.Cmd):
         self.cylinders = None
         self.drive_train = None
         self.cage_type = None
+        self.cage_size = None
 
     def do_EOF(self, line: str) -> True:
         """
@@ -666,6 +668,7 @@ class Shell(SpecificOptionsShell):
     DRIVE = 'any', 'fwd', 'rwd', '4wd'
     SUBTYPES = 'any', 'bus','convertible', 'coupe', 'hatchback', 'minivan', 'offroad', \
                'pickup', 'sedan', 'truck', 'suv', 'wagon', 'van', 'other'
+    CAR_SIZE = 'compact', 'full-size', 'mid-size', 'sub-compact'
 
     def do_cylinders(self, count: str) -> None:
         """
@@ -781,6 +784,41 @@ class Shell(SpecificOptionsShell):
         else:
             completions = [option for option in self.SUBTYPES if option.startswith(text)]
         return completions
+
+    def do_car_size(self, variant: str) -> None:
+        """
+        Allows user to specify car size
+        """
+        if self.vehicle_type != 'cars/trucks':
+            print('Set vehicle type to cars/trucks first.')
+            return
+        if variant in self.CAR_SIZE:
+            self.cage_size = variant
+        else:
+            print(f'Invalid car size: `{variant}`.')
+            self.help_type()
+
+    def complete_car_size(self, text: str, line: str, start_index: int, end_index: str) -> list:
+        """
+        :param text:
+        :param line:
+        :param start_index:
+        :param end_index:
+        :return:
+        """
+        if not text:
+            completions = self.CAR_SIZE[:]
+        else:
+            completions = [option for option in self.CAR_SIZE if option.startswith(text)]
+        return completions
+
+    def help_car_size(self):
+        """
+        Prints help message for car_size
+        """
+        initial_desc = 'Used to specify car size'
+        usage = 'Usage: `car_size <size>`', 'ex: car_size full-size'
+        help_message(initial_desc, usage, long_desc=None)
 
 
 def help_message(initial_desc: str, usage: list or tuple, long_desc: list or tuple) -> None:

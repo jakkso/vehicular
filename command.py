@@ -4,7 +4,7 @@ Contains CLI argparser implementation
 
 from argparse import ArgumentParser as Ag
 
-from dicts import MOTO_SELLER, CAR_SELLER
+from dicts import BOOL_OPTIONS, CAR_SELLER, MOTO_SELLER
 from shell import Shell
 
 
@@ -137,10 +137,17 @@ class Run(Shell):
                       'completekey'
         options = {key: value for key, value in self.__dict__.items() if key not
                    in non_options}
+        sel_options = []
         if self.city and self.seller_abbrev and self.make_model:
-            pass
+            base_url = f'{self.CITY_DICT[self.city]}{self.seller_abbrev}?format=rss&'
+            for key, value in options.items():
+                if value:
+                    if key in BOOL_OPTIONS:
+                        sel_options.append(BOOL_OPTIONS[key])
+
         else:
             print('At a minimum, you must set the city, seller type, vehicle type '
                   'and a make_model.')
 
-
+# ex search URL:
+# https://denver.craigslist.org/search/mca?format=rss&auto_make_model=street triple
