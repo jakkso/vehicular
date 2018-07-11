@@ -6,6 +6,16 @@ except ImportError:
 import cmd
 import pickle
 import sys
+from dicts import (CAR_SIZE,
+                   CAR_TYPE,
+                   COLORS,
+                   CONDITION,
+                   CYLINDER_COUNT,
+                   DRIVETRAIN,
+                   FUEL_TYPES,
+                   TITLE_STATUS,
+                   TRANSMISSION)
+
 
 sys.modules['readline'] = gnureadline
 
@@ -60,8 +70,8 @@ class BaseShell(cmd.Cmd):
         self.nearby_areas = False
         self.titles_only = False
         #  Open ended, numerical options
-        self.zip_code = None
-        self.distance_from_zip = None
+        self.postal = None
+        self.distance_from_postal = None
         self.min_miles = None
         self.max_miles = None
         self.min_price = None
@@ -305,39 +315,47 @@ class OpenEndedShell(BoolShell):
     """
     Further Extends the shell to include open ended option inputs
     """
-    def do_zip_code(self, zip_code: str) -> None:
+    def do_postal_code(self, postal: str) -> None:
         """
-        Sets self.zip_code to zip_code
+        Sets self.postal to postal
         """
-        self.zip_code = zip_code
-        print(f'Zip code set to: {self.zip_code}.')
+        self.postal = f'postal={postal}'
+        print(f'Postal code set to: {postal}.')
 
-    def help_zip_code(self) -> None:
+    def help_postal_code(self) -> None:
         """
-        Prints help message for zip_code
+        Prints help message for postal_code
         """
         initial_desc = 'Used to specify zip / postal code'
-        usage = 'Usage: `zip_code <zip_code>`',\
-                'ex: `zip_code 10001` specifies zip code 10001'
+        usage = 'Usage: `postal_code <postal_code>`',\
+                'ex: `postal_code 10001` specifies postal code 10001'
         help_message(initial_desc, usage, long_desc=None)
 
-    def do_distance_from_zip(self, distance: str) -> None:
+    def do_distance_from_postal(self, distance: str) -> None:
         """
-        Sets self.distance_from_zip to distance
+        Sets self.distance_from_postal to distance
         """
-        if self.zip_code:
-            self.distance_from_zip = distance
-            print(f'Distance from zip code set to: {self.distance_from_zip}.')
-        else:
-            print('You must first set a zip code in order to have a distance from it.')
+        if not self.postal:
+            print('You must first set a postal/zip code in order to have a distance from it.')
+            return
+        try:
+            distance = int(distance)
+        except ValueError:
+            print(f'Invalid value: `{distance}`, must be a number.')
+            return
+        if distance > 200:
+            print('Distance must be less than 200')
+            return
+        self.distance_from_postal = f'search_distance={distance}'
+        print(f'Distance from postal/zip code set to: {distance}.')
 
-    def help_distance_from_zip(self) -> None:
+    def help_distance_from_postal(self) -> None:
         """
-        Prints help message for distance_from_zip
+        Prints help message for distance_from_postal
         """
-        initial_desc = 'Used to specify distance from zip code'
-        usage = 'Usage: `distance_from_zip <distance>`', 'ex: `distance_from_zip 500`'
-        long_desc = 'In order for this option to work, you must first set the zip code.',
+        initial_desc = 'Used to specify distance from postal/zip code'
+        usage = 'Usage: `distance_from_postal <distance>`', 'ex: `distance_from_postal 500`'
+        long_desc = 'In order for this option to work, you must first set the postal/zip code.',
         help_message(initial_desc, usage, long_desc)
 
     def do_min_price(self, price) -> None:
@@ -349,8 +367,8 @@ class OpenEndedShell(BoolShell):
         except ValueError:
             print(f'Invalid price: `{price}`.')
             return
-        self.min_price = price
-        print(f'Min price set to: {self.min_price}.')
+        self.min_price = f'min_price={price}'
+        print(f'Min price set to: {price}.')
 
     def help_min_price(self) -> None:
         """
@@ -370,8 +388,8 @@ class OpenEndedShell(BoolShell):
         except ValueError:
             print(f'Invalid price: `{price}`.')
             return
-        self.max_price = price
-        print(f'Max price set to: {self.max_price}.')
+        self.max_price = f'max_price={price}'
+        print(f'Max price set to: {price}.')
 
     def help_max_price(self) -> None:
         """
@@ -391,8 +409,8 @@ class OpenEndedShell(BoolShell):
         except ValueError:
             print(f'Invalid miles: `{miles}`.')
             return
-        self.min_miles = miles
-        print(f'Minimum miles set to: {self.min_miles}.')
+        self.min_miles = f'min_auto_miles={miles}'
+        print(f'Minimum miles set to: {miles}.')
 
     def help_min_miles(self) -> None:
         """
@@ -412,8 +430,8 @@ class OpenEndedShell(BoolShell):
         except ValueError:
             print(f'Invalid miles: `{miles}`.')
             return
-        self.max_miles = miles
-        print(f'Maximum miles set to: {self.max_miles}.')
+        self.max_miles = f'max_auto_miles={miles}'
+        print(f'Maximum miles set to: {miles}.')
 
     def help_max_miles(self) -> None:
         """
@@ -433,8 +451,8 @@ class OpenEndedShell(BoolShell):
         except ValueError:
             print(f'Invalid year: `{year}`.')
             return
-        self.max_year = year
-        print(f'Maximum year set to: {self.max_year}.')
+        self.max_year = f'max_auto_year={year}'
+        print(f'Maximum year set to: {year}.')
 
     def help_max_year(self) -> None:
         """
@@ -454,8 +472,8 @@ class OpenEndedShell(BoolShell):
         except ValueError:
             print(f'Invalid year: `{year}`.')
             return
-        self.min_year = year
-        print(f'Minimum year set to: {self.min_year}.')
+        self.min_year = f'min_auto_year={year}'
+        print(f'Minimum year set to: {year}.')
 
     def help_min_year(self) -> None:
         """
@@ -466,17 +484,36 @@ class OpenEndedShell(BoolShell):
         long_desc = 'Year must be a number',
         help_message(initial_desc, usage, long_desc)
 
+    def do_make_model(self, make_model: str) -> None:
+        """
+        :param make_model: str, car make model for which to search.
+        :return: None
+        """
+        if make_model:
+            self.make_model = f'auto_make_model={make_model.replace(" ", "+")}'
+            print(f'Searching for {make_model}')
+        else:
+            print('Be sure to actually search for something')
+
+    def help_make_model(self) -> None:
+        """
+        Prints help message for make_model
+        """
+        initial_desc = 'Used to specify for which vehicle make & model to search.'
+        usage = 'Usage: `make_model <make>`', 'ex: make_model toyota tacoma'
+        help_message(initial_desc, usage, None)
+
 
 class SpecificOptionsShell(OpenEndedShell):
     """
     Used to implement options that have specific options
     """
-    CONDITIONS = 'any', 'new', 'like-new', 'excellent', 'good', 'fair', 'salvage'
-    FUEL = 'any', 'gas', 'diesel', 'hybrid', 'electric', 'other'
-    COLOR = 'any', 'black', 'blue', 'brown', 'green', 'grey', 'orange', 'purple', \
+    CONDITIONS = 'new', 'like-new', 'excellent', 'good', 'fair', 'salvage'
+    FUEL = 'gas', 'diesel', 'hybrid', 'electric', 'other'
+    COLOR = 'black', 'blue', 'brown', 'green', 'grey', 'orange', 'purple', \
             'red', 'silver', 'white', 'yellow', 'other'
-    TRANSMISSION = 'any', 'manual', 'automatic', 'other'
-    TITLE_STATUS = 'any', 'clean', 'salvage', 'rebuilt', 'parts-only', 'lien', 'missing'
+    TRANSMISSION = 'manual', 'automatic', 'other'
+    TITLE_STATUS = 'clean', 'salvage', 'rebuilt', 'parts-only', 'lien', 'missing'
 
     def do_condition(self, condition) -> None:
         """
@@ -485,7 +522,7 @@ class SpecificOptionsShell(OpenEndedShell):
         :return:
         """
         if condition in self.CONDITIONS:
-            self.condition = condition
+            self.condition = CONDITION[condition]
             print(f'Condition set to: {self.condition}.')
         else:
             print(f'Invalid condition: `{condition}`.')
@@ -523,8 +560,8 @@ class SpecificOptionsShell(OpenEndedShell):
         :return:
         """
         if status in self.TITLE_STATUS:
-            self.title_status = status
-            print(f'Title status set to: {self.title_status}')
+            self.title_status = TITLE_STATUS[status]
+            print(f'Title status set to: {status}')
         else:
             print(f'Invalid title status: `{status}`.')
             self.help_title_status()
@@ -559,7 +596,7 @@ class SpecificOptionsShell(OpenEndedShell):
         :return:
         """
         if fuel in self.FUEL:
-            self.fuel = fuel
+            self.fuel = FUEL_TYPES[fuel]
             print(f'Fuel set to {fuel}.')
         else:
             print(f'Invalid fuel `{fuel}`.')
@@ -593,7 +630,7 @@ class SpecificOptionsShell(OpenEndedShell):
         Specifies color for vehicle
         """
         if color in self.COLOR:
-            self.color = color
+            self.color = COLORS[color]
             print(f'Color set to {color}.')
         else:
             print(f'Invalid color: `{color}`.')
@@ -629,10 +666,10 @@ class SpecificOptionsShell(OpenEndedShell):
         :return:
         """
         if variant in self.TRANSMISSION:
-            self.transmission = variant
-            print(f'Transmission set to {self.transmission}.')
+            self.transmission = TRANSMISSION[variant]
+            print(f'Transmission set to {variant}.')
         else:
-            print(f'Invalid transmission: `{self.transmission}`.')
+            print(f'Invalid transmission: `{variant}`.')
             self.help_transmission()
 
     def help_transmission(self) -> None:
@@ -664,9 +701,9 @@ class Shell(SpecificOptionsShell):
     Used to implement options specific to cars/trucks.  Motorcycles share all other
     options with cars
     """
-    CYLINDERS = 'any', '3', '4', '5', '6', '8', '10', '12', 'other'
-    DRIVE = 'any', 'fwd', 'rwd', '4wd'
-    SUBTYPES = 'any', 'bus','convertible', 'coupe', 'hatchback', 'minivan', 'offroad', \
+    CYLINDERS = '3', '4', '5', '6', '8', '10', '12', 'other'
+    DRIVE = 'fwd', 'rwd', '4wd'
+    SUBTYPES = 'bus', 'convertible', 'coupe', 'hatchback', 'minivan', 'offroad', \
                'pickup', 'sedan', 'truck', 'suv', 'wagon', 'van', 'other'
     CAR_SIZE = 'compact', 'full-size', 'mid-size', 'sub-compact'
 
@@ -680,8 +717,8 @@ class Shell(SpecificOptionsShell):
             print('Set vehicle type to cars/trucks first')
             return
         if count in self.CYLINDERS:
-            self.cylinders = count
-            print(f'Set cylinders to {self.cylinders}.')
+            self.cylinders = CYLINDER_COUNT[count]
+            print(f'Set cylinders to {count}.')
         else:
             print(f'Invalid cylinder count: `{count}`.')
             self.help_cylinders()
@@ -719,8 +756,8 @@ class Shell(SpecificOptionsShell):
             print('Set vehicle type to cars/trucks first.')
             return
         if variant in self.DRIVE:
-            self.drive_train = variant
-            print(f'Drive train set to : `{self.drive_train}`.')
+            self.drive_train = DRIVETRAIN[variant]
+            print(f'Drive train set to : `{variant}`.')
         else:
             print(f'Invalid variant: `{variant}`.')
             self.help_drive_train()
@@ -756,8 +793,8 @@ class Shell(SpecificOptionsShell):
             print('Set vehicle type to cars/trucks first.')
             return
         if variant in self.SUBTYPES:
-            self.cage_type = variant
-            print(f'Vehicle subtype set to `{self.cage_type}`.')
+            self.cage_type = CAR_TYPE[variant]
+            print(f'Vehicle subtype set to `{variant}`.')
         else:
             print(f'Invalid vehicle subtype: `{variant}`.')
             self.help_type()
@@ -793,7 +830,8 @@ class Shell(SpecificOptionsShell):
             print('Set vehicle type to cars/trucks first.')
             return
         if variant in self.CAR_SIZE:
-            self.cage_size = variant
+            self.cage_size = CAR_SIZE[variant]
+            print(f'Car size set to {variant}.')
         else:
             print(f'Invalid car size: `{variant}`.')
             self.help_type()
