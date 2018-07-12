@@ -176,6 +176,7 @@ class Parser(Database):
         new_hits = [entry for entry in fp.parse(url).entries
                     if entry['id'] not in self._get_hits(url)]
         for hit in new_hits:
+            hit['title'] = hit['title'].replace('&#x0024;', '$')
             self._update_hits(url, hit['id'])
         self._update_time(url)
         return new_hits
