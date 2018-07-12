@@ -112,7 +112,16 @@ class Run(CarShell):
         :param args:
         :return: None
         """
-        Message().run()
+        user, password, recipient = self.database.credentials
+        if user:
+            hits = self.database.run_search()
+            if hits:
+                print('New hits found!')
+                Message(user, password, recipient, hits).run()
+            else:
+                print('No new search hits.')
+        else:
+            print('Ensure that credentials have been set successfully first.')
 
     @staticmethod
     def help_run_search() -> None:
@@ -133,7 +142,7 @@ class Run(CarShell):
         long_desc = 'Remember, each search must be unique!',
         help_message(initial_desc, usage, long_desc)
 
-    def do_delete_search(self, *args)-> None:
+    def do_delete_search(self, *args) -> None:
         """
         Draws deletion menu
         """

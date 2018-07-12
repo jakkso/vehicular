@@ -13,7 +13,7 @@ def credential_validation(user: str, pw: str) -> bool:
     False otherwise
     :return: bool
     """
-    server = smtplib.SMTP(host=Config.HOSTNAME, port=Config.PORT)
+    server = smtplib.SMTP(host=Config.hostname, port=Config.port)
     server.starttls()
     try:
         status_code, *_ = server.login(user=user, password=pw)
