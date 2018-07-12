@@ -10,6 +10,7 @@ from dicts import (BOOL_OPTIONS,
                    MOTO_SELLER)
 from message import Message
 from shell import CarShell, help_message
+from utilities import credential_validation as cv
 
 
 class Run(CarShell):
@@ -67,14 +68,19 @@ class Run(CarShell):
 
     def do_credentials(self, *args) -> None:
         """
-        Allows user to set credentials
+        Allows user to store credentials in the database.  Uses
+        utilities.credential_verification to verify that supplied credentials
+        actually work.
         :param args:
         :return:
         """
         recipient = input('Recipient address: ')
         sender = input('Sender: ')
         password = getpass.getpass('Sender\'s password: ')
-        FPIntegration().set_credentials(sender, password, recipient)
+        if cv(user=sender, pw=password):
+            FPIntegration().set_credentials(sender, password, recipient)
+        else:
+            print('Login attempt failed!  Incorrect username / password?')
 
     @staticmethod
     def help_credentials() -> None:
