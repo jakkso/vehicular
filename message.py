@@ -5,7 +5,7 @@ import smtplib
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 from config import Config
-from database import Parser
+from database import FPIntegration
 
 
 class Message:
@@ -13,7 +13,7 @@ class Message:
     Composes and sends email messages
     """
     def __init__(self):
-        self.parser = Parser
+        self.parser = FPIntegration
         self.html = None
         self.text = None
 

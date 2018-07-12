@@ -1,41 +1,27 @@
 """
-Contains CLI argparser implementation
+Contains integration of cmd, database and message classes.
 """
 import getpass
 import sqlite3
 
-from database import Parser
+from database import FPIntegration
 from dicts import (BOOL_OPTIONS,
                    CAR_SELLER,
                    MOTO_SELLER)
 from message import Message
-from shell import Shell, help_message
-
-"""
-# Get options from user
-    # Cities are the real sticking point: there are ~700 valid cities
-    # The JS version of CLNotify use a form of autocorrect to get the spelling correct
-    # What to do here? I'd like to allow the user to cities.  Perhaps some sort of CLI autocomplete library?
-    # Looks like our solution is a custom shell built using the cmd library and gnureadline!  Woohoo!
-# convert rec'd options into URL formatted options via dicts
-# Combine URL formatted options into single rss feed url
-# Add to database, update, refresh, etc, essentially copy from CLNotify
-
-# ex search URL:
-# https://denver.craigslist.org/search/mca?format=rss&auto_make_model=street triple
-"""
+from shell import CarShell, help_message
 
 
-class Run(Shell):
+class Run(CarShell):
     """
-    Final child of shell class hierarchy, implements the methods use to
-    build the search URL, as well as storing searches in the database
+    Final child of shell class hierarchy, implements the methods used to
+    build the search URL, as well as CRUD methods for managing searches
     """
 
     def __init__(self):
         super(Run, self).__init__()
         self.seller_abbrev = None
-        self.database = Parser()
+        self.database = FPIntegration()
         self.database.create_database()
 
     def create_seller_abbrev(self) -> None:
@@ -88,9 +74,10 @@ class Run(Shell):
         recipient = input('Recipient address: ')
         sender = input('Sender: ')
         password = getpass.getpass('Sender\'s password: ')
-        Parser().set_credentials(sender, password, recipient)
+        FPIntegration().set_credentials(sender, password, recipient)
 
-    def help_credentials(self) -> None:
+    @staticmethod
+    def help_credentials() -> None:
         """
         Displays help message for credentials command
         """
@@ -106,7 +93,8 @@ class Run(Shell):
         url = self.search_url
         if url:
             try:
-                self.database.add_search(url, name='null')
+                name = self.make_model.split('=')[1].replace('+', ' ')
+                self.database.add_search(url, name=name)
                 Message().run()
                 self.reset_search_options()
             except sqlite3.IntegrityError:
@@ -120,7 +108,8 @@ class Run(Shell):
         """
         Message().run()
 
-    def help_run_search(self) -> None:
+    @staticmethod
+    def help_run_search() -> None:
         """
         Displays help message for run_message
         """
@@ -128,13 +117,48 @@ class Run(Shell):
         usage = ' simply run `run_search`',
         help_message(initial_desc, usage, long_desc=None)
 
-    def help_add_search(self) -> None:
+    @staticmethod
+    def help_add_search() -> None:
         """
         Displays help message for add_search command
         """
         initial_desc = 'Used to add search URL to database'
         usage = 'type `add_search`',
         long_desc = 'Remember, each search must be unique!',
+        help_message(initial_desc, usage, long_desc)
+
+    def do_delete_search(self, *args)-> None:
+        """
+        Draws deletion menu
+        """
+        # Creates a dictionary with a number corresponding to each search
+        url_name = {num: item for num, item in enumerate(self.database.get_url_name())}
+        if url_name:
+            for key, value in url_name.items():
+                # value[0] is the url, value[1] is the name
+                print(f'{key}: {value[1]}')
+            choice = input('Search to delete: ')
+            try:
+                choice = int(choice)
+                self.database.remove_search(url_name[choice][0])
+            except ValueError:
+                print('Invalid choice')
+            except KeyError:
+                print('Invalid choice')
+        else:
+            print('No active searches')
+
+    @staticmethod
+    def help_delete_search() -> None:
+        """
+        Displays help menu for deletion menu
+        """
+        initial_desc = 'Used to delete searches from database'
+        usage = 'Usage: type `delete_search`', 'Follow the prompts to remove a ' \
+                                               'particular search'
+        long_desc = 'Type the number listed next to the name to remove a search from ' \
+                    'the database',\
+                    'This process cannot be undone, so be careful!'
         help_message(initial_desc, usage, long_desc)
 
     def reset_search_options(self) -> None:
@@ -149,6 +173,24 @@ class Run(Shell):
             if key not in non_options:
                 self.__dict__[key] = None
 
+    def do_print_searches(self, *args) -> None:
+        """
+        Prints out names of all searches in the database
+        """
+        print('Current searches')
+        print('*' * 40)
+        for item in self.database.get_url_name():
+            print(item[1])
+        print('*' * 40)
+
+    @staticmethod
+    def help_print_searches() -> None:
+        """
+        Prints out help menu for print_searches
+        """
+        initial = 'Used to print out the current searches'
+        usage = 'Usage: type `print_searches`',
+        help_message(initial, usage, long_desc=None)
 
 
 if __name__ == '__main__':

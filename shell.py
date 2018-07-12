@@ -1,3 +1,8 @@
+"""
+Contains classes that extend cmd.Cmd shell, implementing various search options
+storage and autocompletion of said options.
+"""
+
 try:
     import gnureadline
 except ImportError:
@@ -29,8 +34,8 @@ class BaseShell(cmd.Cmd):
     form of do_XXX, complete_XXX and help_XXX.
 
     do_XXX: Inside the shell created by running cmd.Cmd().cmdloop(), when the user types
-        command `XXX` and presses enter, do_XXX is called, passing whatever argument follows
-        command `XXX`.
+        command `XXX` and presses enter, do_XXX is called, passing whatever argument
+        follows command `XXX`.
 
     complete_XXX: This is used to enable bash-style auto-completion upon pressing tab.
         It takes 4 parameters:
@@ -39,14 +44,14 @@ class BaseShell(cmd.Cmd):
             start_index: start index of `text`
             end_index: end index of `text`
         The way it's implemented is that if `text` is empty, then the entire list
-        of potential options is returned. Otherwise, a list of items that start with `text`
-        is returned.
+        of potential options is returned. Otherwise, a list of items that start with
+        `text` is returned.
 
         The user types the command followed by a partial option, presses tab.  If the
-        partial option is close to a single option, that option replaces the partial option.
-        Otherwise, the system bell sounds.  If there are no matches, successive tab key presses
-        just ring the system bell.  If there are multiple matches, pressing tab prints the
-        partial matches.
+        partial option is close to a single option, that option replaces the partial
+        option. Otherwise, the system bell sounds.  If there are no matches, successive
+        tab key presses just ring the system bell.  If there are multiple matches,
+        pressing tab prints the partial matches.
 
     help_XXX: Is called when user types help XXX.
     """
@@ -100,7 +105,8 @@ class BaseShell(cmd.Cmd):
         print('Exiting...')
         return True
 
-    def help_EOF(self) -> None:
+    @staticmethod
+    def help_EOF() -> None:
         """
         Prints help for EOF
         """
@@ -118,9 +124,13 @@ class BaseShell(cmd.Cmd):
             self.city = city
             print(f'City set to {city}.')
         else:
-            print(f'Invalid city: `{city}`.  Be sure to enter exactly what is suggested')
+            print(f'Invalid city: `{city}`.  Be sure to enter exactly what is '
+                  f'suggested')
 
-    def complete_city(self, text: str, line: str, start_index: int, end_index: int) -> list:
+    def complete_city(self, text: str,
+                      line: str,
+                      start_index: int,
+                      end_index: int) -> list:
         """
         Sets up auto completion for cities
         :param text:
@@ -135,7 +145,8 @@ class BaseShell(cmd.Cmd):
             completions = [city for city in self.CITIES if city.startswith(text)]
         return completions
 
-    def help_city(self) -> None:
+    @staticmethod
+    def help_city() -> None:
         """
         Prints help for city command
         """
@@ -165,7 +176,10 @@ class BaseShell(cmd.Cmd):
             print(f'Invalid vehicle type: `{vehicle_type}`.')
             self.help_vehicle_type()
 
-    def complete_vehicle_type(self, text: str, line: str, start_index: int, end_index: int) -> list:
+    def complete_vehicle_type(self, text: str,
+                              line: str,
+                              start_index: int,
+                              end_index: int) -> list:
         """
         :param text:
         :param line:
@@ -176,10 +190,12 @@ class BaseShell(cmd.Cmd):
         if not text:
             completions = self.VEHICLE_TYPES[:]
         else:
-            completions = [type_ for type_ in self.VEHICLE_TYPES if type_.startswith(text)]
+            completions = [type_ for type_ in self.VEHICLE_TYPES if
+                           type_.startswith(text)]
         return completions
 
-    def help_vehicle_type(self) -> None:
+    @staticmethod
+    def help_vehicle_type() -> None:
         """
         Prints help for using vehicle_type command
         """
@@ -199,7 +215,10 @@ class BaseShell(cmd.Cmd):
         else:
             print(f'Invalid seller type `{seller_type}`')
 
-    def complete_seller_type(self, text: str, line: str, start_index: int, end_index: int) -> list:
+    def complete_seller_type(self, text: str,
+                             line: str,
+                             start_index: int,
+                             end_index: int) -> list:
         """
 
         :param text:
@@ -211,10 +230,12 @@ class BaseShell(cmd.Cmd):
         if not text:
             completions = self.SELLER_TYPES[:]
         else:
-            completions = [option for option in self.SELLER_TYPES if option.startswith(text)]
+            completions = [option for option in self.SELLER_TYPES if
+                           option.startswith(text)]
         return completions
 
-    def help_seller_type(self) -> None:
+    @staticmethod
+    def help_seller_type() -> None:
         """
         Prints help for using seller_type command
         :return:
@@ -237,7 +258,8 @@ class BoolShell(BaseShell):
         self.has_images = not self.has_images
         print(f'Posts must have images: {self.has_images}.')
 
-    def help_has_images(self) -> None:
+    @staticmethod
+    def help_has_images() -> None:
         """
         Prints has_images help message
         """
@@ -253,7 +275,8 @@ class BoolShell(BaseShell):
         self.posted_today = not self.posted_today
         print(f'Posts must have been posted today: {self.posted_today}.')
 
-    def help_posted_today(self) -> None:
+    @staticmethod
+    def help_posted_today() -> None:
         """
         Prints posted_today help message
         """
@@ -269,7 +292,8 @@ class BoolShell(BaseShell):
         self.crypto_okay = not self.crypto_okay
         print(f'Posts must accept payment in cryptocurrency: {self.crypto_okay}.')
 
-    def help_crypto(self) -> None:
+    @staticmethod
+    def help_crypto() -> None:
         """
         Prints crypto help message
         """
@@ -285,7 +309,8 @@ class BoolShell(BaseShell):
         self.titles_only = not self.titles_only
         print(f'Search titles only: {self.titles_only}')
 
-    def help_titles_only(self) -> None:
+    @staticmethod
+    def help_titles_only() -> None:
         """
         Prints titles_only help message
         """
@@ -301,7 +326,8 @@ class BoolShell(BaseShell):
         self.nearby_areas = not self.nearby_areas
         print(f'Search nearby areas: {self.nearby_areas}.')
 
-    def help_nearby_areas(self) -> None:
+    @staticmethod
+    def help_nearby_areas() -> None:
         """
         Prints help message for nearby areas
         """
@@ -318,12 +344,15 @@ class OpenEndedShell(BoolShell):
     """
     def do_postal_code(self, postal: str) -> None:
         """
-        Sets self.postal to postal
+        Allows user to specify postal code to search
+        :param postal:
+        :return: None
         """
         self.postal = f'postal={postal}'
         print(f'Postal code set to: {postal}.')
 
-    def help_postal_code(self) -> None:
+    @staticmethod
+    def help_postal_code() -> None:
         """
         Prints help message for postal_code
         """
@@ -334,10 +363,14 @@ class OpenEndedShell(BoolShell):
 
     def do_distance_from_postal(self, distance: str) -> None:
         """
-        Sets self.distance_from_postal to distance
+        Allows user to specify a distance from postal code in wich to search.
+        Max 200 miles/KM
+        :param distance:
+        :return: None
         """
         if not self.postal:
-            print('You must first set a postal/zip code in order to have a distance from it.')
+            print('You must first set a postal/zip code in order to have a distance '
+                  'from it.')
             return
         try:
             distance = int(distance)
@@ -350,18 +383,23 @@ class OpenEndedShell(BoolShell):
         self.distance_from_postal = f'search_distance={distance}'
         print(f'Distance from postal/zip code set to: {distance}.')
 
-    def help_distance_from_postal(self) -> None:
+    @staticmethod
+    def help_distance_from_postal() -> None:
         """
         Prints help message for distance_from_postal
         """
         initial_desc = 'Used to specify distance from postal/zip code'
-        usage = 'Usage: `distance_from_postal <distance>`', 'ex: `distance_from_postal 500`'
-        long_desc = 'In order for this option to work, you must first set the postal/zip code.',
+        usage = 'Usage: `distance_from_postal <distance>`', \
+                'ex: `distance_from_postal 500`'
+        long_desc = 'In order for this option to work, you must first set the ' \
+                    'postal/zip code.',
         help_message(initial_desc, usage, long_desc)
 
     def do_min_price(self, price) -> None:
         """
-        Sets self.min_price to price
+        Allows user to specify min price
+        :param price:
+        :return: None
         """
         try:
             price = int(price)
@@ -371,7 +409,8 @@ class OpenEndedShell(BoolShell):
         self.min_price = f'min_price={price}'
         print(f'Min price set to: {price}.')
 
-    def help_min_price(self) -> None:
+    @staticmethod
+    def help_min_price() -> None:
         """
         Prints help message for min_price
         """
@@ -382,7 +421,9 @@ class OpenEndedShell(BoolShell):
 
     def do_max_price(self, price) -> None:
         """
-        Sets self.max_price to price
+        Allows user to specify max price
+        :param price:
+        :return: None
         """
         try:
             price = int(price)
@@ -392,7 +433,8 @@ class OpenEndedShell(BoolShell):
         self.max_price = f'max_price={price}'
         print(f'Max price set to: {price}.')
 
-    def help_max_price(self) -> None:
+    @staticmethod
+    def help_max_price() -> None:
         """
         Prints help message for max_price
         """
@@ -403,7 +445,9 @@ class OpenEndedShell(BoolShell):
 
     def do_min_miles(self, miles) -> None:
         """
-        Sets self.min_miles to miles
+        Allows user to specify min mileage
+        :param miles:
+        :return: None
         """
         try:
             miles = int(miles)
@@ -413,7 +457,8 @@ class OpenEndedShell(BoolShell):
         self.min_miles = f'min_auto_miles={miles}'
         print(f'Minimum miles set to: {miles}.')
 
-    def help_min_miles(self) -> None:
+    @staticmethod
+    def help_min_miles() -> None:
         """
         Prints help message for min_miles
         """
@@ -424,7 +469,9 @@ class OpenEndedShell(BoolShell):
 
     def do_max_miles(self, miles) -> None:
         """
-        Sets self.max_miles to miles
+        Allows user to specify max mileage
+        :param miles:
+        :return: None
         """
         try:
             miles = int(miles)
@@ -434,7 +481,8 @@ class OpenEndedShell(BoolShell):
         self.max_miles = f'max_auto_miles={miles}'
         print(f'Maximum miles set to: {miles}.')
 
-    def help_max_miles(self) -> None:
+    @staticmethod
+    def help_max_miles() -> None:
         """
         Prints help message for max_miles
         """
@@ -445,7 +493,9 @@ class OpenEndedShell(BoolShell):
 
     def do_max_year(self, year) -> None:
         """
-        Sets self.max_year to year
+        Allows user to specify max year
+        :param year:
+        :return: None
         """
         try:
             year = int(year)
@@ -455,7 +505,8 @@ class OpenEndedShell(BoolShell):
         self.max_year = f'max_auto_year={year}'
         print(f'Maximum year set to: {year}.')
 
-    def help_max_year(self) -> None:
+    @staticmethod
+    def help_max_year() -> None:
         """
         Prints help message for max_year
         """
@@ -466,7 +517,9 @@ class OpenEndedShell(BoolShell):
 
     def do_min_year(self, year) -> None:
         """
-        Sets self.min_year to year
+        Allows user to specify min year for which to search
+        :param year:
+        :return: None
         """
         try:
             year = int(year)
@@ -476,7 +529,8 @@ class OpenEndedShell(BoolShell):
         self.min_year = f'min_auto_year={year}'
         print(f'Minimum year set to: {year}.')
 
-    def help_min_year(self) -> None:
+    @staticmethod
+    def help_min_year() -> None:
         """
         Prints help message for min_year
         """
@@ -487,7 +541,8 @@ class OpenEndedShell(BoolShell):
 
     def do_make_model(self, make_model: str) -> None:
         """
-        :param make_model: str, car make model for which to search.
+        Allows user to specify make and model for which to search.
+        :param make_model: str, vehicle make model
         :return: None
         """
         if make_model:
@@ -496,7 +551,8 @@ class OpenEndedShell(BoolShell):
         else:
             print('Be sure to actually search for something')
 
-    def help_make_model(self) -> None:
+    @staticmethod
+    def help_make_model() -> None:
         """
         Prints help message for make_model
         """
@@ -518,9 +574,9 @@ class SpecificOptionsShell(OpenEndedShell):
 
     def do_condition(self, condition) -> None:
         """
-
+        Allows user to specify vehicle condition
         :param condition:
-        :return:
+        :return: None
         """
         if condition in self.CONDITIONS:
             self.condition = CONDITION[condition]
@@ -539,7 +595,10 @@ class SpecificOptionsShell(OpenEndedShell):
                     ' '.join(self.CONDITIONS)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_condition(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_condition(self, text: str,
+                           line: str,
+                           start_index: int,
+                           end_index: str) -> list:
         """
 
         :param text:
@@ -551,14 +610,15 @@ class SpecificOptionsShell(OpenEndedShell):
         if not text:
             completions = self.CONDITIONS[:]
         else:
-            completions = [option for option in self.CONDITIONS if option.startswith(text)]
+            completions = [option for option in self.CONDITIONS
+                           if option.startswith(text)]
         return completions
 
     def do_title_status(self, status: str) -> None:
         """
-
+        Allows user to specify title status
         :param status:
-        :return:
+        :return: None
         """
         if status in self.TITLE_STATUS:
             self.title_status = TITLE_STATUS[status]
@@ -576,7 +636,10 @@ class SpecificOptionsShell(OpenEndedShell):
         long_desc = 'Valid options: ', ' '.join(self.TITLE_STATUS)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_title_status(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_title_status(self, text: str,
+                              line: str,
+                              start_index: int,
+                              end_index: str) -> list:
         """
         :param text:
         :param line:
@@ -587,14 +650,15 @@ class SpecificOptionsShell(OpenEndedShell):
         if not text:
             completions = self.TITLE_STATUS[:]
         else:
-            completions = [option for option in self.TITLE_STATUS if option.startswith(text)]
+            completions = [option for option in self.TITLE_STATUS
+                           if option.startswith(text)]
         return completions
 
     def do_fuel(self, fuel: str) -> None:
         """
-
+        Allows user to specify fuel type
         :param fuel:
-        :return:
+        :return: None
         """
         if fuel in self.FUEL:
             self.fuel = FUEL_TYPES[fuel]
@@ -612,7 +676,9 @@ class SpecificOptionsShell(OpenEndedShell):
         long_desc = 'Valid options: ', ' '.join(self.FUEL)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_fuel(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_fuel(self, text: str, line: str,
+                      start_index: int,
+                      end_index: str) -> list:
         """
         :param text:
         :param line:
@@ -628,7 +694,9 @@ class SpecificOptionsShell(OpenEndedShell):
 
     def do_color(self, color: str) -> None:
         """
-        Specifies color for vehicle
+        Allows user to specify color for vehicle
+        :param color:
+        :return: None
         """
         if color in self.COLOR:
             self.color = COLORS[color]
@@ -646,7 +714,9 @@ class SpecificOptionsShell(OpenEndedShell):
         long_desc = 'Valid options: ', ' '.join(self.COLOR)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_color(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_color(self, text: str, line: str,
+                       start_index: int,
+                       end_index: str) -> list:
         """
         :param text:
         :param line:
@@ -662,9 +732,9 @@ class SpecificOptionsShell(OpenEndedShell):
 
     def do_transmission(self, variant: str) -> None:
         """
-
+        Allows user to specify transmission variant
         :param variant: transmission variant
-        :return:
+        :return: None
         """
         if variant in self.TRANSMISSION:
             self.transmission = TRANSMISSION[variant]
@@ -682,7 +752,10 @@ class SpecificOptionsShell(OpenEndedShell):
         long_desc = 'Valid options', ' '.join(self.TRANSMISSION)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_transmission(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_transmission(self, text: str,
+                              line: str,
+                              start_index: int,
+                              end_index: int) -> list:
         """
         :param text:
         :param line:
@@ -693,11 +766,12 @@ class SpecificOptionsShell(OpenEndedShell):
         if not text:
             completions = self.TRANSMISSION[:]
         else:
-            completions = [option for option in self.TRANSMISSION if option.startswith(text)]
+            completions = [option for option in self.TRANSMISSION
+                           if option.startswith(text)]
         return completions
 
 
-class Shell(SpecificOptionsShell):
+class CarShell(SpecificOptionsShell):
     """
     Used to implement options specific to cars/trucks.  Motorcycles share all other
     options with cars
@@ -710,9 +784,9 @@ class Shell(SpecificOptionsShell):
 
     def do_cylinders(self, count: str) -> None:
         """
-
-        :param count:
-        :return:
+        Allows user to specify cylinder count
+        :param count: number of cylinders
+        :return: None
         """
         if self.vehicle_type != 'cars/trucks':
             print('Set vehicle type to cars/trucks first')
@@ -733,7 +807,10 @@ class Shell(SpecificOptionsShell):
         long_desc = 'Can only be used with cars/trucks', 'Valid options', ' '.join(self.CYLINDERS)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_cylinders(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_cylinders(self, text: str,
+                           line: str,
+                           start_index: int,
+                           end_index: int) -> list:
         """
         :param text:
         :param line:
@@ -749,9 +826,9 @@ class Shell(SpecificOptionsShell):
 
     def do_drive_train(self, variant: str) -> None:
         """
-
+        Allows user to specify drive train type.  e.g., 4wd, rwd or fwd
         :param variant:
-        :return:
+        :return: None
         """
         if self.vehicle_type != 'cars/trucks':
             print('Set vehicle type to cars/trucks first.')
@@ -772,7 +849,10 @@ class Shell(SpecificOptionsShell):
         long_desc = 'Can only be used with cars/trucks', 'Valid options: ', ' '.join(self.DRIVE)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_drive_train(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_drive_train(self, text: str,
+                             line: str,
+                             start_index: int,
+                             end_index: int) -> list:
         """
         :param text:
         :param line:
@@ -789,6 +869,8 @@ class Shell(SpecificOptionsShell):
     def do_type(self, variant: str) -> None:
         """
         Allows user to specify type of car/truck
+        :param variant:
+        :return: None
         """
         if self.vehicle_type != 'cars/trucks':
             print('Set vehicle type to cars/trucks first.')
@@ -802,14 +884,17 @@ class Shell(SpecificOptionsShell):
 
     def help_type(self) -> None:
         """
-        Prints help message for subtypes option
+        Prints help message for cars/trucks subtypes
         """
         initial_desc = 'Used to specify vehicle subtype'
         usage = 'Usage: `type <type>`', 'ex: `type bus`'
         long_desc = 'Can only be used with cars/trucks', 'Valid options: ', ' '.join(self.SUBTYPES)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_type(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_type(self, text: str,
+                      line: str,
+                      start_index: int,
+                      end_index: int) -> list:
         """
         :param text:
         :param line:
@@ -826,6 +911,8 @@ class Shell(SpecificOptionsShell):
     def do_car_size(self, variant: str) -> None:
         """
         Allows user to specify car size
+        :param variant:
+        :return: None
         """
         if self.vehicle_type != 'cars/trucks':
             print('Set vehicle type to cars/trucks first.')
@@ -837,7 +924,10 @@ class Shell(SpecificOptionsShell):
             print(f'Invalid car size: `{variant}`.')
             self.help_type()
 
-    def complete_car_size(self, text: str, line: str, start_index: int, end_index: str) -> list:
+    def complete_car_size(self, text: str,
+                          line: str,
+                          start_index: int,
+                          end_index: str) -> list:
         """
         :param text:
         :param line:
@@ -851,7 +941,8 @@ class Shell(SpecificOptionsShell):
             completions = [option for option in self.CAR_SIZE if option.startswith(text)]
         return completions
 
-    def help_car_size(self):
+    @staticmethod
+    def help_car_size():
         """
         Prints help message for car_size
         """
@@ -860,7 +951,9 @@ class Shell(SpecificOptionsShell):
         help_message(initial_desc, usage, long_desc=None)
 
 
-def help_message(initial_desc: str, usage: list or tuple, long_desc: list or tuple) -> None:
+def help_message(initial_desc: str,
+                 usage: list or tuple,
+                 long_desc: list or tuple) -> None:
     """
     Used to simplify and standardize printing out help messages for the various
     help_XXX methods
@@ -877,7 +970,3 @@ def help_message(initial_desc: str, usage: list or tuple, long_desc: list or tup
         print('*' * 80)
         print('\n'.join(long_desc))
         print('*' * 80)
-
-
-if __name__ == '__main__':
-    Shell().cmdloop()

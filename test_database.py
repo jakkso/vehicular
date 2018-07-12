@@ -2,7 +2,7 @@ import os
 import sqlite3
 import unittest
 
-from database import Database, Parser
+from database import Database, FPIntegration
 
 DB = 'test_db.db'
 URL = 'google.com'
@@ -16,8 +16,8 @@ class TestDatabase(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        with Database(DB) as _db:
-            _db.create_database()
+        with Database(DB) as db:
+            db.create_database()
 
     def tearDown(self) -> None:
         os.remove(DB)
@@ -70,17 +70,19 @@ class TestDatabase(unittest.TestCase):
             db.cursor.execute('SELECT hits FROM searches WHERE url = ?', (URL,))
             self.assertEqual('123,456,789,10,11,12', db.cursor.fetchone()[0])
 
-    def test_get_searches(self) -> None:
+    def test_get_url_name(self) -> None:
         """
-        Tests that search fetching works properly
+        Tests getting name / URLs from database
         """
         with Database(DB) as db:
             db.add_search(URL, 'test_name')
-            db._update_hits(URL, '123', '456', '789')
-            db.add_search('yahoo.com', 'name_2')
-            db._update_hits('yahoo.com', '1', '2', '3')
-            self.assertEqual([URL, 'yahoo.com'],
-                             db._get_urls())
+            db.add_search('youtube', 'asdf')
+            db.add_search('4chan', 'cuck')
+            res = db.get_url_name()
+            self.assertEqual([(URL, 'test_name'),
+                              ('youtube', 'asdf'),
+                              ('4chan', 'cuck')],
+                             res)
 
     def test_update_time(self) -> None:
         """
@@ -131,7 +133,7 @@ class TestDatabase(unittest.TestCase):
 class TestParser(TestDatabase):
 
     def test_search_worker(self):
-        with Parser(DB) as par:
+        with FPIntegration(DB) as par:
             par.add_search(RSS, 'bob')
             par.add_search(RSS2, 'bob2')
             orig_hits = par.run_search()

@@ -1,5 +1,5 @@
 """
-Contains database connection class
+Contains classes that define database usage methods
 """
 from multiprocessing.dummy import Pool as ThreadPool
 import os
@@ -26,8 +26,13 @@ class Database:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # TODO write logger && log exceptions here
-        pass
+        if exc_type is not None:
+            print(f'Error: {exc_val}\n{exc_tb}')
+            self._connection.rollback()
+            self._connection.close()
+        else:
+            self._connection.commit()
+            self._connection.close()
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}({self._database})>'
@@ -35,9 +40,20 @@ class Database:
     def create_database(self) -> None:
         """
         Used to init database file.
-        updated is simply unix time.  Craigslist only updates RSS feeds once per hour,
-        this is used to keep track of when the feed was last parsed
-        cl_id is the craigslist post id.  Don't need repeats, after all.
+
+        url - CL RSS feed URL
+
+        name - Name of the make_model search.  Human readable
+
+        updated - simply unix time.  Craigslist only updates RSS feeds once per hour,
+            this is used to keep track of when the feed was last parsed and only
+            run searches when at least one hour has elapsed since the last search.
+
+        hits - CSV string of search ID's (Which are actually just the URLs for each
+            individual CL post).  When fetched, they're split into a list.  Could just
+            use foreign keys, but this is (slightly) easier to deal with.  I really
+            ought to learn to write better SQL
+
         :return: None
         """
         self.cursor.execute('CREATE TABLE IF NOT EXISTS searches '
@@ -53,9 +69,9 @@ class Database:
 
     def add_search(self, url: str, name: str) -> None:
         """
-        Adds search URL to database
+        Adds search URL to database, along with name associated with each search.
         :param url: search URL to store in database
-        :param name: search name
+        :param name: search name, human readable name.  Taken from the make_model
         :return:
         """
         self.cursor.execute('INSERT INTO searches (url, name, updated) VALUES (?,?,?)',
@@ -64,26 +80,28 @@ class Database:
 
     def remove_search(self, url: str) -> None:
         """
-        Removes search & associated search hits
-        :param url: search name.
+        Removes search from database, based on RSS feed url
+        :param url: RSS feed url
         :return:
         """
         self.cursor.execute('DELETE FROM searches WHERE url = ?', (url,))
         self._connection.commit()
 
-    def _get_urls(self) -> list:
+    def get_url_name(self) -> list:
         """
-        Returns a list of search urls
-        :return:
+        Returns list of tuples of search urls and names, like below:
+
+         [('example.rss.feed.url.1.craigslist.org', 'Human readable name 1),
+         ('example.rss.feed.url.2.craigslist.org', 'Human readable name 2)]
+
         """
-        self.cursor.execute('SELECT url FROM searches')
-        return [url[0] for url in self.cursor.fetchall()]
+        self.cursor.execute('SELECT url, name FROM searches')
+        return self.cursor.fetchall()
 
     def get_urls(self) -> list:
         """
         Returns a list of search urls that need to be updated.  CL only updates the
         RSS feeds once per hour.  This method returns urls that haven't been updated in the last hour
-        :return:
         """
         now = time()
         self.cursor.execute('SELECT url FROM searches WHERE ? >= updated + 3600', (now,))
@@ -97,12 +115,16 @@ class Database:
         self.cursor.execute('SELECT hits FROM searches WHERE url = ?', (url,))
         try:
             res = self.cursor.fetchone()[0].split(',')
+        # .split() doesn't work on None results
         except AttributeError:
             res = []
         return res
 
     def _update_hits(self, url: str, *hits) -> None:
         """
+        Gets previous hits from database, combines all new hits (Which are CL urls)
+        into a single string, which is then stored in the row associated with its
+        rss url
 
         :param url: search URL
         :param hits: list of search hit IDs
@@ -117,7 +139,7 @@ class Database:
 
     def _update_time(self, url: str) -> None:
         """
-        Updates updated to time.time()
+        Updates updated to current time.time for the specified rss feed url
         :param url: rss feed URL
         :return: None
         """
@@ -126,19 +148,20 @@ class Database:
     @property
     def credentials(self) -> tuple:
         """
-        Returns tuple of sender email address, password and recipient email address
-        :return:
+        Returns tuple of sender email address, password and recipient email
+        address from the database
+        :return: tuple
         """
         self.cursor.execute('SELECT sender, password, recipient FROM settings WHERE id = 1')
         return self.cursor.fetchone()
 
     def set_credentials(self, sender: str, password: str, recipient: str) -> None:
         """
-        Sets email credentials
+        Sets email credentials.
         :param sender:
         :param password:
         :param recipient:
-        :return:
+        :return: None
         """
         self.cursor.execute('SELECT sender FROM settings')
         res = self.cursor.fetchone()
@@ -152,14 +175,19 @@ class Database:
         self._connection.commit()
 
 
-class Parser(Database):
+class FPIntegration(Database):
     """
     Integrates Feedparser into database operations
     """
     def run_search(self) -> list:
         """
+        Updates rss feed urls (Remember, Database.get_urls only returns urls
+        that haven't been updated in the last hour) and builds a single list of
+        FeedParserDicts from feedparser.parse(url).entries.
 
-        :return:
+        These updates are returned by FPIntegration._search_worker
+
+        :return: list of FeedParserDicts
         """
         new_hits = []
         for url in self.get_urls():
@@ -169,7 +197,12 @@ class Parser(Database):
 
     def _search_worker(self, url) -> list:
         """
-        Gets list of new hits, increments search to current time.time()
+        Gets list of new hits associated with a single RSS feed url, increments
+        row's updated value to current value of time.time()
+
+        At a later date, I intend to refactor FPIntegration.run_search and
+        FPIntegration._search_worker to use multiprocessing.dummy.Pool.
+
         :param url: RSS Feed URL
         :return:
         """
