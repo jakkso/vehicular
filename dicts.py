@@ -8,7 +8,7 @@ BOOL_OPTIONS = {
 CAR_SELLER = {
     'dealer': 'ctd',
     'owner': 'cto',
-    'all': 'cta'
+    'both': 'cta'
 }
 
 CAR_SIZE = {
@@ -86,7 +86,7 @@ FUEL_TYPES = {
 MOTO_SELLER = {
     'dealer': 'mcd',
     'owner': 'mco',
-    'all': 'mca'
+    'both': 'mca'
 }
 
 TITLE_STATUS = {

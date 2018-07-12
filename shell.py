@@ -6,6 +6,7 @@ except ImportError:
 import cmd
 import pickle
 import sys
+
 from dicts import (CAR_SIZE,
                    CAR_TYPE,
                    COLORS,

@@ -1,11 +1,15 @@
 """
 Contains CLI argparser implementation
 """
-from database import Database
+import getpass
+import sqlite3
+
+from database import Parser
 from dicts import (BOOL_OPTIONS,
                    CAR_SELLER,
                    MOTO_SELLER)
-from shell import Shell
+from message import Message
+from shell import Shell, help_message
 
 """
 # Get options from user
@@ -31,7 +35,7 @@ class Run(Shell):
     def __init__(self):
         super(Run, self).__init__()
         self.seller_abbrev = None
-        self.database = Database()
+        self.database = Parser()
         self.database.create_database()
 
     def create_seller_abbrev(self) -> None:
@@ -55,7 +59,7 @@ class Run(Shell):
         self.create_seller_abbrev()
         non_options = 'stdin', 'stdout', 'name', 'mode', 'encoding', 'cmdqueue', \
                       'completekey', 'city', 'vehicle_type', 'seller_type', \
-                      'seller_abbrev', 'database'
+                      'seller_abbrev', 'database', 'lastcmd', 'completion_matches'
         options = {key: value for key, value in self.__dict__.items() if key not
                    in non_options and value}
         sel_options = []
@@ -69,21 +73,82 @@ class Run(Shell):
                 else:
                     # All other options are in the completed form
                     sel_options.append(value)
-            url = base_url + '&'.join(sel_options)
-            print(url)
-            return url
+                return base_url + '&'.join(sel_options)
         else:
             msg = 'At a minimum, you must set the city, seller type,' \
                   ' vehicle type and a make_model.'
             print(msg)
 
-    def do_create_search(self, *args) -> None:
+    def do_credentials(self, *args) -> None:
         """
-
+        Allows user to set credentials
         :param args:
         :return:
         """
-        # Now to write the method that actually validates / adds search url to database.
+        recipient = input('Recipient address: ')
+        sender = input('Sender: ')
+        password = getpass.getpass('Sender\'s password: ')
+        Parser().set_credentials(sender, password, recipient)
+
+    def help_credentials(self) -> None:
+        """
+        Displays help message for credentials command
+        """
+        initial_desc = 'Used to set credentials for sending email messages'
+        usage = 'Input the credentials as directed', 'Be sure that they are correct'
+        help_message(initial_desc, usage, long_desc=None)
+
+    def do_add_search(self, *args) -> None:
+        """
+        Adds search URL to database
+        :return:
+        """
+        url = self.search_url
+        if url:
+            try:
+                self.database.add_search(url, name='null')
+                Message().run()
+                self.reset_search_options()
+            except sqlite3.IntegrityError:
+                print('Each search must be unique!')
+
+    def do_run_search(self, *args) -> None:
+        """
+        Run search and send emails.
+        :param args:
+        :return: None
+        """
+        Message().run()
+
+    def help_run_search(self) -> None:
+        """
+        Displays help message for run_message
+        """
+        initial_desc = 'Used to run search for all URLs in database'
+        usage = ' simply run `run_search`',
+        help_message(initial_desc, usage, long_desc=None)
+
+    def help_add_search(self) -> None:
+        """
+        Displays help message for add_search command
+        """
+        initial_desc = 'Used to add search URL to database'
+        usage = 'type `add_search`',
+        long_desc = 'Remember, each search must be unique!',
+        help_message(initial_desc, usage, long_desc)
+
+    def reset_search_options(self) -> None:
+        """
+        Sets search values to None
+        :return: None
+        """
+        non_options = 'stdin', 'stdout', 'name', 'mode', 'encoding', 'cmdqueue', \
+                      'completekey', 'city', 'vehicle_type', 'seller_type', \
+                      'seller_abbrev', 'database', 'lastcmd', 'completion_matches'
+        for key in self.__dict__:
+            if key not in non_options:
+                self.__dict__[key] = None
+
 
 
 if __name__ == '__main__':

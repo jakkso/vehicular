@@ -1,0 +1,12 @@
+<div class="panel panel-primary">
+    <div class="panel-heading">
+       <p class="panel-title">{{ listing['title'] }}</p>
+    </div>
+    <div class="panel-body">
+        {% if 'enc_enclosure' in listing %}
+        <div class="image"><img src="{{ listing['enc_enclosure']['resource'] }}"></div>
+        {% endif %}
+        <p>{{ listing['summary'] }}</p>
+        <p> <a href="{{ listing['link'] }}" target="_blank">Link</a></p>
+    </div>
+</div>

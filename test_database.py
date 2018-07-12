@@ -7,6 +7,7 @@ from database import Database, Parser
 DB = 'test_db.db'
 URL = 'google.com'
 RSS = 'feed:https://denver.craigslist.org/search/cta?auto_make_model=f150&format=rss'
+RSS2 = 'feed:https://denver.craigslist.org/search/cta?auto_make_model=dodge%20ram&format=rss'
 
 
 class TestDatabase(unittest.TestCase):
@@ -52,9 +53,9 @@ class TestDatabase(unittest.TestCase):
         """
         with Database(DB) as db:
             db.add_search('google.com', 'test_name')
-            self.assertEqual([], db.get_hits('google.com'))
+            self.assertEqual([], db._get_hits('google.com'))
             db.cursor.execute('UPDATE searches SET hits = ? WHERE url = ?', ('hello,friend', 'google.com'))
-            self.assertEqual(['hello', 'friend'], db.get_hits('google.com'))
+            self.assertEqual(['hello', 'friend'], db._get_hits('google.com'))
 
     def test_update_hits(self) -> None:
         """
@@ -62,10 +63,10 @@ class TestDatabase(unittest.TestCase):
         """
         with Database(DB) as db:
             db.add_search(URL, 'test_name')
-            db.update_hits(URL, '123', '456', '789')
+            db._update_hits(URL, '123', '456', '789')
             db.cursor.execute('SELECT hits FROM searches WHERE url = ?', (URL,))
             self.assertEqual('123,456,789', db.cursor.fetchone()[0])
-            db.update_hits(URL, '10', '11', '12')
+            db._update_hits(URL, '10', '11', '12')
             db.cursor.execute('SELECT hits FROM searches WHERE url = ?', (URL,))
             self.assertEqual('123,456,789,10,11,12', db.cursor.fetchone()[0])
 
@@ -75,11 +76,56 @@ class TestDatabase(unittest.TestCase):
         """
         with Database(DB) as db:
             db.add_search(URL, 'test_name')
-            db.update_hits(URL, '123', '456', '789')
+            db._update_hits(URL, '123', '456', '789')
             db.add_search('yahoo.com', 'name_2')
-            db.update_hits('yahoo.com', '1', '2', '3')
+            db._update_hits('yahoo.com', '1', '2', '3')
             self.assertEqual([URL, 'yahoo.com'],
-                             db.get_searches())
+                             db._get_urls())
+
+    def test_update_time(self) -> None:
+        """
+        Tests time update incrementation
+        """
+        with Database(DB) as db:
+            db.add_search(URL, 'test_name')
+            db.cursor.execute('SELECT updated FROM searches WHERE url = ?', (URL,))
+            time_1 = db.cursor.fetchone()[0]
+            db._update_time(URL)
+            db.cursor.execute('SELECT updated FROM searches WHERE url = ?', (URL,))
+            time_2 = db.cursor.fetchone()[0]
+            self.assertGreater(time_2, time_1)
+
+    def test_get_urls_time_limited(self)-> None:
+        """
+        Database.get_urls() is time limited to only return URLs that have been not been updated
+        in the last hour, this is testing that functionality
+        :return:
+        """
+        with Database(DB) as db:
+            db.add_search(URL, 'test_name')
+            db.add_search('yahoo', 'name2')
+            db.add_search('msn.com', 'name3')
+            urls = db.get_urls()
+            self.assertEqual([URL, 'yahoo', 'msn.com'], urls)
+            db._update_time(URL)
+            urls = db.get_urls()
+            self.assertEqual(['yahoo', 'msn.com'], urls)
+            db._update_time('msn.com')
+            urls = db.get_urls()
+            self.assertEqual(['yahoo'], urls)
+            db._update_time('yahoo')
+            urls = db.get_urls()
+            self.assertEqual([], urls)
+
+    def test_get_credentials(self):
+        """
+        Tests credential property method as well as set_credentials
+        """
+        with Database(DB) as db:
+            db.set_credentials('a.potts.bot', 'sample_password', 'mellandru')
+            self.assertEqual(('a.potts.bot', 'sample_password', 'mellandru'), db.credentials)
+            db.set_credentials('a', 'b', 'c')
+            self.assertEqual(('a', 'b', 'c'), db.credentials)
 
 
 class TestParser(TestDatabase):
@@ -87,7 +133,14 @@ class TestParser(TestDatabase):
     def test_search_worker(self):
         with Parser(DB) as par:
             par.add_search(RSS, 'bob')
-            par.run_search()
+            par.add_search(RSS2, 'bob2')
+            orig_hits = par.run_search()
+            self.assertGreater(len(orig_hits), 0)
+            # Change time to ensure that the search is actually run again.  Otherwise,
+            # since the time has been updated, Parser.get_urls will return no URLs
+            par.cursor.execute('UPDATE searches SET updated = 0 WHERE url = ?', (RSS,))
+            second_run = par.run_search()
+            self.assertEqual([], second_run)
 
 
 if __name__ == '__main__':

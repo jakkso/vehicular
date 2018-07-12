@@ -20,7 +20,6 @@ class Database:
         """
         self._database = database
         self._connection = sqlite3.connect(self._database)
-        self._connection.execute('PRAGMA foreign_keys=ON')
         self.cursor = self._connection.cursor()
 
     def __enter__(self):
@@ -44,10 +43,13 @@ class Database:
         self.cursor.execute('CREATE TABLE IF NOT EXISTS searches '
                             '(url TEXT UNIQUE, '
                             'name TEXT, '
-                            'updated TEXT,'
+                            'updated INTEGER,'
                             'hits TEXT)')
         self.cursor.execute('CREATE TABLE IF NOT EXISTS settings '
-                            '(id INTEGER, sender TEXT, password TEXT, recipient TEXT)')
+                            '(id INTEGER PRIMARY KEY, '
+                            'sender TEXT, '
+                            'password TEXT, '
+                            'recipient TEXT)')
 
     def add_search(self, url: str, name: str) -> None:
         """
@@ -57,7 +59,7 @@ class Database:
         :return:
         """
         self.cursor.execute('INSERT INTO searches (url, name, updated) VALUES (?,?,?)',
-                            (url, name, time()))
+                            (url, name, 0))
         self._connection.commit()
 
     def remove_search(self, url: str) -> None:
@@ -69,7 +71,7 @@ class Database:
         self.cursor.execute('DELETE FROM searches WHERE url = ?', (url,))
         self._connection.commit()
 
-    def get_searches(self) -> list:
+    def _get_urls(self) -> list:
         """
         Returns a list of search urls
         :return:
@@ -77,7 +79,17 @@ class Database:
         self.cursor.execute('SELECT url FROM searches')
         return [url[0] for url in self.cursor.fetchall()]
 
-    def get_hits(self, url: str) -> list:
+    def get_urls(self) -> list:
+        """
+        Returns a list of search urls that need to be updated.  CL only updates the
+        RSS feeds once per hour.  This method returns urls that haven't been updated in the last hour
+        :return:
+        """
+        now = time()
+        self.cursor.execute('SELECT url FROM searches WHERE ? >= updated + 3600', (now,))
+        return [item[0] for item in self.cursor.fetchall()]
+
+    def _get_hits(self, url: str) -> list:
         """
         Returns list of search hits associated with a rss search
         :param url: rss search url
@@ -89,17 +101,54 @@ class Database:
             res = []
         return res
 
-    def update_hits(self, url: str, *hits) -> None:
+    def _update_hits(self, url: str, *hits) -> None:
         """
 
         :param url: search URL
         :param hits: list of search hit IDs
         :return: None
         """
-        previous_hits = self.get_hits(url)
+        previous_hits = self._get_hits(url)
         for hit in hits:
             previous_hits.append(hit)
         self.cursor.execute('UPDATE searches SET hits = ? WHERE url = ?', (','.join(previous_hits), url))
+        self._connection.commit()
+        self._update_time(url)
+
+    def _update_time(self, url: str) -> None:
+        """
+        Updates updated to time.time()
+        :param url: rss feed URL
+        :return: None
+        """
+        self.cursor.execute('UPDATE searches SET updated = ? WHERE url = ?', (time(), url))
+
+    @property
+    def credentials(self) -> tuple:
+        """
+        Returns tuple of sender email address, password and recipient email address
+        :return:
+        """
+        self.cursor.execute('SELECT sender, password, recipient FROM settings WHERE id = 1')
+        return self.cursor.fetchone()
+
+    def set_credentials(self, sender: str, password: str, recipient: str) -> None:
+        """
+        Sets email credentials
+        :param sender:
+        :param password:
+        :param recipient:
+        :return:
+        """
+        self.cursor.execute('SELECT sender FROM settings')
+        res = self.cursor.fetchone()
+        if res is None:
+            self.cursor.execute('INSERT INTO settings(sender, password, recipient) '
+                                'VALUES (?,?,?)', (sender, password, recipient))
+        else:
+            self.cursor.execute('UPDATE settings set sender = ?, password = ?, recipient = ? '
+                                'WHERE id = 1',
+                                (sender, password, recipient))
         self._connection.commit()
 
 
@@ -113,25 +162,20 @@ class Parser(Database):
         :return:
         """
         new_hits = []
-        for url in self.get_searches():
-            # Extend flattens all
-            new_hits.extend(self.search_worker(url))
+        for url in self.get_urls():
+            # Extend flattens all list results from each url
+            new_hits.extend(self._search_worker(url))
         return new_hits
 
-    def search_worker(self, url) -> list:
+    def _search_worker(self, url) -> list:
         """
+        Gets list of new hits, increments search to current time.time()
         :param url: RSS Feed URL
         :return:
         """
         new_hits = [entry for entry in fp.parse(url).entries
-                    if entry['id'] not in self.get_hits(url)]
+                    if entry['id'] not in self._get_hits(url)]
         for hit in new_hits:
-            self.update_hits(url, hit['id'])
+            self._update_hits(url, hit['id'])
+        self._update_time(url)
         return new_hits
-
-
-
-
-
-
-
