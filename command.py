@@ -4,13 +4,13 @@ Contains integration of cmd, database and message classes.
 import getpass
 import sqlite3
 
-from database import FPIntegration, run_search
-from dicts import (BOOL_OPTIONS,
-                   CAR_SELLER,
-                   MOTO_SELLER)
-from message import Message
-from shell import CarShell, help_message
-from utilities import credential_validation as cv
+from CLSearch.database import FPIntegration, run_search
+from CLSearch.dicts import (BOOL_OPTIONS,
+                            CAR_SELLER,
+                            MOTO_SELLER)
+from CLSearch.message import Message
+from CLSearch.shell import CarShell, help_message
+from CLSearch.utilities import credential_validation as cv
 
 
 class Run(CarShell):
@@ -116,7 +116,11 @@ class Run(CarShell):
         :param args:
         :return: None
         """
-        user, password, recipient = self.database.credentials
+        try:
+            user, password, recipient = self.database.credentials
+        except TypeError:
+            print('Ensure that credentials have been set successfully first.')
+            return
         if user:
             if threaded:
                 hits = run_search()
@@ -127,8 +131,6 @@ class Run(CarShell):
                 Message(user, password, recipient, hits).send()
             else:
                 print('No new search hits.')
-        else:
-            print('Ensure that credentials have been set successfully first.')
 
     @staticmethod
     def help_run_search() -> None:
@@ -194,16 +196,22 @@ class Run(CarShell):
         for key in self.__dict__:
             if key not in non_options:
                 self.__dict__[key] = None
+        # `both` is the default option for seller_type
+        self.__dict__['seller_type'] = 'both'
 
     def do_print_searches(self, *args) -> None:
         """
         Prints out names of all searches in the database
         """
-        print('Current searches')
-        print('*' * 40)
-        for item in self.database.get_url_name():
-            print(item[1])
-        print('*' * 40)
+        searches = self.database.get_url_name()
+        if searches:
+            print('Current searches')
+            print('*' * 40)
+            for item in searches:
+                print(item[1])
+            print('*' * 40)
+        else:
+            print('No active searches.')
 
     @staticmethod
     def help_print_searches() -> None:

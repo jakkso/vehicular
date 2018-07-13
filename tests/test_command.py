@@ -3,7 +3,7 @@ from time import time
 import unittest
 
 from command import Run
-from database import Database
+from CLSearch.database import Database
 
 MAKES = ['harley davidson', 'gsxr', 'drz', 'cbr', 'klx', 'crf', 'triumph', 'sv650', 'Honda CB750', ' Honda XR650R',
          'KTM', 'Honda CR500', 'Suzuki GSXR 1000', 'Honda CBR600', 'BMW S1000RR', 'Aprilia RSV4',
@@ -24,7 +24,7 @@ class WetRunOrCommaFuckTheMan(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        with open('cred.txt') as file:
+        with open('tests/cred.txt') as file:
             sender, pw, recipient = file.read().split('\n')
         with Database() as db:
             db.create_database()
@@ -38,7 +38,7 @@ class WetRunOrCommaFuckTheMan(unittest.TestCase):
                 run.do_add_search()
 
     def tearDown(self) -> None:
-        os.remove('data.db')
+        os.remove('CLSearch/data.db')
 
     def test_threaded_run(self) -> None:
         """

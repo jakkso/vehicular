@@ -13,15 +13,15 @@ import pickle
 import sys
 from typing import List
 
-from dicts import (CAR_SIZE,
-                   CAR_TYPE,
-                   COLORS,
-                   CONDITION,
-                   CYLINDER_COUNT,
-                   DRIVETRAIN,
-                   FUEL_TYPES,
-                   TITLE_STATUS,
-                   TRANSMISSION)
+from CLSearch.dicts import (CAR_SIZE,
+                            CAR_TYPE,
+                            COLORS,
+                            CONDITION,
+                            CYLINDER_COUNT,
+                            DRIVETRAIN,
+                            FUEL_TYPES,
+                            TITLE_STATUS,
+                            TRANSMISSION)
 
 
 sys.modules['readline'] = gnureadline
@@ -57,7 +57,7 @@ class BaseShell(cmd.Cmd):
     help_XXX: Is called when user types help XXX.
     """
 
-    with open('cities.p', 'rb') as file:
+    with open('CLSearch/cities.p', 'rb') as file:
         CITY_DICT = pickle.load(file)
     CITIES = [city for city in CITY_DICT]
     VEHICLE_TYPES = 'motorcycle', 'cars/trucks'
@@ -69,7 +69,7 @@ class BaseShell(cmd.Cmd):
         self.city = None
         self.vehicle_type = None
         self.make_model = None
-        self.seller_type = None
+        self.seller_type = 'both'
         #  Boolean options
         self.has_images = False
         self.posted_today = False

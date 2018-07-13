@@ -9,7 +9,7 @@ from typing import List
 from feedparser import FeedParserDict
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from config import Config
+from CLSearch.config import Config
 
 
 class Message:
@@ -62,7 +62,7 @@ class Message:
         :return: None
         """
         env = Environment(
-            loader=PackageLoader('message', 'templates'),
+            loader=PackageLoader('CLSearch', 'templates'),
             autoescape=select_autoescape(['html', 'xml'])
         )
         template = env.get_template('base.html')
@@ -74,7 +74,7 @@ class Message:
         :return: None
         """
         env = Environment(
-            loader=PackageLoader('message', 'templates'),
+            loader=PackageLoader('CLSearch', 'templates'),
             autoescape=select_autoescape(['.txt'])
         )
         template = env.get_template('base.txt')
