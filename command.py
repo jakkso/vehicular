@@ -4,7 +4,7 @@ Contains integration of cmd, database and message classes.
 import getpass
 import sqlite3
 
-from database import FPIntegration
+from database import FPIntegration, run_search
 from dicts import (BOOL_OPTIONS,
                    CAR_SELLER,
                    MOTO_SELLER)
@@ -80,7 +80,7 @@ class Run(CarShell):
         if cv(user=sender, pw=password):
             FPIntegration().set_credentials(sender, password, recipient)
         else:
-            print('Login attempt failed!  Incorrect username / password?')
+            print('Verification failure!  Incorrect username / password?')
 
     @staticmethod
     def help_credentials() -> None:
@@ -100,24 +100,31 @@ class Run(CarShell):
         if url:
             try:
                 name = self.make_model.split('=')[1].replace('+', ' ')
+                print(f'Added {name} search.')
                 self.database.add_search(url, name=name)
-                Message().run()
                 self.reset_search_options()
             except sqlite3.IntegrityError:
                 print('Each search must be unique!')
 
-    def do_run_search(self, *args) -> None:
+    def do_run_search(self, threaded: bool=True, *args) -> None:
         """
-        Run search and send emails.
+        Run search and send email notification.  If threaded is True, runs search via
+        ThreadPool map.  Otherwise, use the sequential search variant.  Threaded
+        refresh is faster.
+
+        :param threaded: bool
         :param args:
         :return: None
         """
         user, password, recipient = self.database.credentials
         if user:
-            hits = self.database.run_search()
+            if threaded:
+                hits = run_search()
+            else:
+                hits = self.database.run_search()
             if hits:
                 print('New hits found!')
-                Message(user, password, recipient, hits).run()
+                Message(user, password, recipient, hits).send()
             else:
                 print('No new search hits.')
         else:

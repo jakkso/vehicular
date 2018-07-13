@@ -53,9 +53,9 @@ class TestDatabase(unittest.TestCase):
         """
         with Database(DB) as db:
             db.add_search('google.com', 'test_name')
-            self.assertEqual([], db._get_hits('google.com'))
+            self.assertEqual([], db.get_hits('google.com'))
             db.cursor.execute('UPDATE searches SET hits = ? WHERE url = ?', ('hello,friend', 'google.com'))
-            self.assertEqual(['hello', 'friend'], db._get_hits('google.com'))
+            self.assertEqual(['hello', 'friend'], db.get_hits('google.com'))
 
     def test_update_hits(self) -> None:
         """
@@ -63,10 +63,10 @@ class TestDatabase(unittest.TestCase):
         """
         with Database(DB) as db:
             db.add_search(URL, 'test_name')
-            db._update_hits(URL, '123', '456', '789')
+            db.update_hits(URL, '123', '456', '789')
             db.cursor.execute('SELECT hits FROM searches WHERE url = ?', (URL,))
             self.assertEqual('123,456,789', db.cursor.fetchone()[0])
-            db._update_hits(URL, '10', '11', '12')
+            db.update_hits(URL, '10', '11', '12')
             db.cursor.execute('SELECT hits FROM searches WHERE url = ?', (URL,))
             self.assertEqual('123,456,789,10,11,12', db.cursor.fetchone()[0])
 
@@ -92,7 +92,7 @@ class TestDatabase(unittest.TestCase):
             db.add_search(URL, 'test_name')
             db.cursor.execute('SELECT updated FROM searches WHERE url = ?', (URL,))
             time_1 = db.cursor.fetchone()[0]
-            db._update_time(URL)
+            db.update_time(URL)
             db.cursor.execute('SELECT updated FROM searches WHERE url = ?', (URL,))
             time_2 = db.cursor.fetchone()[0]
             self.assertGreater(time_2, time_1)
@@ -109,13 +109,13 @@ class TestDatabase(unittest.TestCase):
             db.add_search('msn.com', 'name3')
             urls = db.get_urls()
             self.assertEqual([URL, 'yahoo', 'msn.com'], urls)
-            db._update_time(URL)
+            db.update_time(URL)
             urls = db.get_urls()
             self.assertEqual(['yahoo', 'msn.com'], urls)
-            db._update_time('msn.com')
+            db.update_time('msn.com')
             urls = db.get_urls()
             self.assertEqual(['yahoo'], urls)
-            db._update_time('yahoo')
+            db.update_time('yahoo')
             urls = db.get_urls()
             self.assertEqual([], urls)
 

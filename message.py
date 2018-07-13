@@ -4,7 +4,9 @@ Contains Message class
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+from typing import List
 
+from feedparser import FeedParserDict
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 from config import Config
@@ -14,7 +16,10 @@ class Message:
     """
     Composes and sends email messages
     """
-    def __init__(self, username: str, password: str, recipient: str, hits: list):
+    def __init__(self, username: str,
+                 password: str,
+                 recipient: str,
+                 hits: List[FeedParserDict]):
         """
 
         :param username:
@@ -28,7 +33,7 @@ class Message:
         self.html = None
         self.text = None
 
-    def run(self) -> None:
+    def send(self) -> None:
         """
         Composes and sends email using the credentials supplied in __init__
         :return: None

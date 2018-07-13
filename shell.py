@@ -11,6 +11,7 @@ except ImportError:
 import cmd
 import pickle
 import sys
+from typing import List
 
 from dicts import (CAR_SIZE,
                    CAR_TYPE,
@@ -96,6 +97,12 @@ class BaseShell(cmd.Cmd):
         self.cage_type = None
         self.cage_size = None
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def __enter__(self):
+        return self
+
     def do_EOF(self, line: str) -> True:
         """
         Allows user to exit shell upon using the standard `ctrl + d`
@@ -127,10 +134,11 @@ class BaseShell(cmd.Cmd):
             print(f'Invalid city: `{city}`.  Be sure to enter exactly what is '
                   f'suggested')
 
-    def complete_city(self, text: str,
+    def complete_city(self,
+                      text: str,
                       line: str,
                       start_index: int,
-                      end_index: int) -> list:
+                      end_index: int) -> List[str]:
         """
         Sets up auto completion for cities
         :param text:
@@ -176,10 +184,11 @@ class BaseShell(cmd.Cmd):
             print(f'Invalid vehicle type: `{vehicle_type}`.')
             self.help_vehicle_type()
 
-    def complete_vehicle_type(self, text: str,
+    def complete_vehicle_type(self,
+                              text: str,
                               line: str,
                               start_index: int,
-                              end_index: int) -> list:
+                              end_index: int) -> List[str]:
         """
         :param text:
         :param line:
@@ -215,10 +224,11 @@ class BaseShell(cmd.Cmd):
         else:
             print(f'Invalid seller type `{seller_type}`')
 
-    def complete_seller_type(self, text: str,
+    def complete_seller_type(self,
+                             text: str,
                              line: str,
                              start_index: int,
-                             end_index: int) -> list:
+                             end_index: int) -> List[str]:
         """
 
         :param text:
@@ -595,10 +605,11 @@ class SpecificOptionsShell(OpenEndedShell):
                     ' '.join(self.CONDITIONS)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_condition(self, text: str,
+    def complete_condition(self,
+                           text: str,
                            line: str,
                            start_index: int,
-                           end_index: str) -> list:
+                           end_index: str) -> List[str]:
         """
 
         :param text:
@@ -636,10 +647,11 @@ class SpecificOptionsShell(OpenEndedShell):
         long_desc = 'Valid options: ', ' '.join(self.TITLE_STATUS)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_title_status(self, text: str,
+    def complete_title_status(self,
+                              text: str,
                               line: str,
                               start_index: int,
-                              end_index: str) -> list:
+                              end_index: str) -> List[str]:
         """
         :param text:
         :param line:
@@ -676,9 +688,11 @@ class SpecificOptionsShell(OpenEndedShell):
         long_desc = 'Valid options: ', ' '.join(self.FUEL)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_fuel(self, text: str, line: str,
+    def complete_fuel(self,
+                      text: str,
+                      line: str,
                       start_index: int,
-                      end_index: str) -> list:
+                      end_index: str) -> List[str]:
         """
         :param text:
         :param line:
@@ -714,9 +728,11 @@ class SpecificOptionsShell(OpenEndedShell):
         long_desc = 'Valid options: ', ' '.join(self.COLOR)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_color(self, text: str, line: str,
+    def complete_color(self,
+                       text: str,
+                       line: str,
                        start_index: int,
-                       end_index: str) -> list:
+                       end_index: str) -> List[str]:
         """
         :param text:
         :param line:
@@ -752,10 +768,11 @@ class SpecificOptionsShell(OpenEndedShell):
         long_desc = 'Valid options', ' '.join(self.TRANSMISSION)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_transmission(self, text: str,
+    def complete_transmission(self,
+                              text: str,
                               line: str,
                               start_index: int,
-                              end_index: int) -> list:
+                              end_index: int) -> List[str]:
         """
         :param text:
         :param line:
@@ -807,10 +824,11 @@ class CarShell(SpecificOptionsShell):
         long_desc = 'Can only be used with cars/trucks', 'Valid options', ' '.join(self.CYLINDERS)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_cylinders(self, text: str,
+    def complete_cylinders(self,
+                           text: str,
                            line: str,
                            start_index: int,
-                           end_index: int) -> list:
+                           end_index: int) -> List[str]:
         """
         :param text:
         :param line:
@@ -849,10 +867,11 @@ class CarShell(SpecificOptionsShell):
         long_desc = 'Can only be used with cars/trucks', 'Valid options: ', ' '.join(self.DRIVE)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_drive_train(self, text: str,
+    def complete_drive_train(self,
+                             text: str,
                              line: str,
                              start_index: int,
-                             end_index: int) -> list:
+                             end_index: int) -> List[str]:
         """
         :param text:
         :param line:
@@ -891,10 +910,11 @@ class CarShell(SpecificOptionsShell):
         long_desc = 'Can only be used with cars/trucks', 'Valid options: ', ' '.join(self.SUBTYPES)
         help_message(initial_desc, usage, long_desc)
 
-    def complete_type(self, text: str,
+    def complete_type(self,
+                      text: str,
                       line: str,
                       start_index: int,
-                      end_index: int) -> list:
+                      end_index: int) -> List[str]:
         """
         :param text:
         :param line:
@@ -924,10 +944,11 @@ class CarShell(SpecificOptionsShell):
             print(f'Invalid car size: `{variant}`.')
             self.help_type()
 
-    def complete_car_size(self, text: str,
+    def complete_car_size(self,
+                          text: str,
                           line: str,
                           start_index: int,
-                          end_index: str) -> list:
+                          end_index: str) -> List[str]:
         """
         :param text:
         :param line:
@@ -952,8 +973,8 @@ class CarShell(SpecificOptionsShell):
 
 
 def help_message(initial_desc: str,
-                 usage: list or tuple,
-                 long_desc: list or tuple) -> None:
+                 usage: tuple,
+                 long_desc: tuple or None) -> None:
     """
     Used to simplify and standardize printing out help messages for the various
     help_XXX methods
