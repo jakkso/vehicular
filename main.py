@@ -17,6 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
+from vehicular.config import Config
 from vehicular.main import Run
 
 
@@ -24,9 +25,9 @@ def launch():
     """
     Launch script.
     """
-    with Run() as run:
+    with Run(Config.database) as run:
         if not run.credentials:
-            print('This looks to be your first time running the progam: set '
+            print('This looks to be your first time running the program: set '
                   'your credentials first.')
             run.do_credentials()
         run.cmdloop()

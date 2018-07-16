@@ -200,7 +200,8 @@ class Run(CarShell):
         """
         non_options = 'stdin', 'stdout', 'name', 'mode', 'encoding', 'cmdqueue', \
                       'completekey', 'city', 'vehicle_type', 'seller_type', \
-                      'seller_abbrev', 'database', 'lastcmd', 'completion_matches'
+                      'seller_abbrev', 'database', 'lastcmd', 'completion_matches', \
+                      'db_file'
         for key in self.__dict__:
             if key not in non_options:
                 self.__dict__[key] = None
