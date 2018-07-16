@@ -2,12 +2,13 @@ import os
 from time import time
 import unittest
 
-from command import Run
+from CLSearch.command import Run
 from CLSearch.database import Database
 
 MAKES = ['harley davidson', 'gsxr', 'drz', 'cbr', 'klx', 'crf', 'triumph', 'sv650', 'Honda CB750', ' Honda XR650R',
          'KTM', 'Honda CR500', 'Suzuki GSXR 1000', 'Honda CBR600', 'BMW S1000RR', 'Aprilia RSV4',
          'Ducati 999R', 'Yamaha R7']
+DB = 'test_db.db'
 
 
 class WetRunOrCommaFuckTheMan(unittest.TestCase):
@@ -26,10 +27,10 @@ class WetRunOrCommaFuckTheMan(unittest.TestCase):
     def setUp(self) -> None:
         with open('tests/cred.txt') as file:
             sender, pw, recipient = file.read().split('\n')
-        with Database() as db:
+        with Database(DB) as db:
             db.create_database()
             db.set_credentials(sender, pw, recipient)
-        with Run() as run:
+        with Run(DB) as run:
             for make in MAKES:
                 run.city = 'denver'
                 run.seller_type = 'both'
@@ -38,7 +39,7 @@ class WetRunOrCommaFuckTheMan(unittest.TestCase):
                 run.do_add_search()
 
     def tearDown(self) -> None:
-        os.remove('CLSearch/data.db')
+        os.remove(DB)
 
     def test_threaded_run(self) -> None:
         """
@@ -48,18 +49,9 @@ class WetRunOrCommaFuckTheMan(unittest.TestCase):
         :return: None
         """
         start = time()
-        with Run() as run:
+        with Run(DB) as run:
             run.do_run_search()
         print(f'Threaded test: {time()-start}.')
-
-    def test_sequential_run(self) -> None:
-        """
-        Sequential integration test.
-        """
-        start = time()
-        with Run() as run:
-            run.do_run_search(threaded=False)
-            print(f'Non-threaded run: {time()-start}')
 
 
 if __name__ == '__main__':

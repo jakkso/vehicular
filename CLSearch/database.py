@@ -11,13 +11,15 @@ from typing import List, Tuple
 
 import feedparser as fp
 
+from CLSearch.config import Config
+
 
 class Database:
     """
     Defines database connection methods
     """
 
-    def __init__(self, database=os.path.join(os.path.dirname(__file__), 'data.db')):
+    def __init__(self, database: str = Config.database):
         """
         :param database: sqlite3 database file.  By default it's located in the same directory as this file.
         """

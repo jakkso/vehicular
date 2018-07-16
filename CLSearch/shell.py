@@ -9,12 +9,13 @@ except ImportError:
     import readline
     gnureadline = readline
 import cmd
-import pickle
+from os import path
 import sys
 from typing import List
 
 from CLSearch.dicts import (CAR_SIZE,
                             CAR_TYPE,
+                            CITIES,
                             COLORS,
                             CONDITION,
                             CYLINDER_COUNT,
@@ -25,6 +26,7 @@ from CLSearch.dicts import (CAR_SIZE,
 
 
 sys.modules['readline'] = gnureadline
+PICKLE_FILE = path.join(path.dirname(__file__), 'cities.p')
 
 
 class BaseShell(cmd.Cmd):
@@ -57,8 +59,7 @@ class BaseShell(cmd.Cmd):
     help_XXX: Is called when user types help XXX.
     """
 
-    with open('CLSearch/cities.p', 'rb') as file:
-        CITY_DICT = pickle.load(file)
+    CITY_DICT = CITIES
     CITIES = [city for city in CITY_DICT]
     VEHICLE_TYPES = 'motorcycle', 'cars/trucks'
     SELLER_TYPES = 'dealer', 'owner', 'both'
@@ -97,16 +98,16 @@ class BaseShell(cmd.Cmd):
         self.cage_type = None
         self.cage_size = None
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
     def __enter__(self):
         return self
 
-    def do_EOF(self, line: str) -> True:
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def do_EOF(self, *args) -> True:
         """
         Allows user to exit shell upon using the standard `ctrl + d`
-        :param line:
+        :param args:
         :return:
         """
         print('Exiting...')
@@ -609,7 +610,7 @@ class SpecificOptionsShell(OpenEndedShell):
                            text: str,
                            line: str,
                            start_index: int,
-                           end_index: str) -> List[str]:
+                           end_index: int) -> List[str]:
         """
 
         :param text:
@@ -651,7 +652,7 @@ class SpecificOptionsShell(OpenEndedShell):
                               text: str,
                               line: str,
                               start_index: int,
-                              end_index: str) -> List[str]:
+                              end_index: int) -> List[str]:
         """
         :param text:
         :param line:
@@ -692,7 +693,7 @@ class SpecificOptionsShell(OpenEndedShell):
                       text: str,
                       line: str,
                       start_index: int,
-                      end_index: str) -> List[str]:
+                      end_index: int) -> List[str]:
         """
         :param text:
         :param line:
@@ -732,7 +733,7 @@ class SpecificOptionsShell(OpenEndedShell):
                        text: str,
                        line: str,
                        start_index: int,
-                       end_index: str) -> List[str]:
+                       end_index: int) -> List[str]:
         """
         :param text:
         :param line:
@@ -948,7 +949,7 @@ class CarShell(SpecificOptionsShell):
                           text: str,
                           line: str,
                           start_index: int,
-                          end_index: str) -> List[str]:
+                          end_index: int) -> List[str]:
         """
         :param text:
         :param line:

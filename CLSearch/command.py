@@ -4,7 +4,8 @@ Contains integration of cmd, database and message classes.
 import getpass
 import sqlite3
 
-from CLSearch.database import FPIntegration, run_search
+from CLSearch.config import Config
+from CLSearch.database import Database, run_search
 from CLSearch.dicts import (BOOL_OPTIONS,
                             CAR_SELLER,
                             MOTO_SELLER)
@@ -19,10 +20,10 @@ class Run(CarShell):
     build the search URL, as well as CRUD methods for managing searches
     """
 
-    def __init__(self):
+    def __init__(self, database: str = Config.database):
         super(Run, self).__init__()
         self.seller_abbrev = None
-        self.database = FPIntegration()
+        self.database = Database(database)
         self.database.create_database()
 
     def create_seller_abbrev(self) -> None:
@@ -78,7 +79,7 @@ class Run(CarShell):
         sender = input('Sender: ')
         password = getpass.getpass('Sender\'s password: ')
         if cv(user=sender, pw=password):
-            FPIntegration().set_credentials(sender, password, recipient)
+            self.database.set_credentials(sender, password, recipient)
         else:
             print('Verification failure!  Incorrect username / password?')
 
@@ -106,13 +107,9 @@ class Run(CarShell):
             except sqlite3.IntegrityError:
                 print('Each search must be unique!')
 
-    def do_run_search(self, threaded: bool=True, *args) -> None:
+    def do_run_search(self, *args) -> None:
         """
-        Run search and send email notification.  If threaded is True, runs search via
-        ThreadPool map.  Otherwise, use the sequential search variant.  Threaded
-        refresh is faster.
-
-        :param threaded: bool
+        Run search and send email notification
         :param args:
         :return: None
         """
@@ -121,11 +118,8 @@ class Run(CarShell):
         except TypeError:
             print('Ensure that credentials have been set successfully first.')
             return
-        if user:
-            if threaded:
-                hits = run_search()
-            else:
-                hits = self.database.run_search()
+        if user and password and recipient:
+            hits = run_search()
             if hits:
                 print('New hits found!')
                 Message(user, password, recipient, hits).send()

@@ -1,3 +1,5 @@
+import os
+
 """
 Contains Config
 """
@@ -5,7 +7,8 @@ Contains Config
 
 class Config:
     """
-    Contains configuration values for sending email messages
+    Contains configuration values
     """
     hostname = 'smtp.gmail.com'
     port = 587
+    database = os.path.join(os.path.dirname(__file__), 'data.db')
