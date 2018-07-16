@@ -4,14 +4,13 @@ Contains classes that define database usage methods
 from itertools import chain
 
 from multiprocessing.dummy import Pool as ThreadPool
-import os
 import sqlite3
 from time import time
 from typing import List, Tuple
 
 import feedparser as fp
 
-from CLSearch.config import Config
+from vehicular.config import Config
 
 
 class Database:
@@ -183,7 +182,8 @@ class Database:
 
 class FPIntegration(Database):
     """
-    Integrates Feedparser into database operations
+    Integrates Feedparser into database operations.  Deprecated in favor of
+    functional threaded approach
     """
 
     def run_search(self) -> List[fp.FeedParserDict]:
@@ -223,16 +223,17 @@ class FPIntegration(Database):
         return new_hits
 
 
-def search_worker(url) -> List[fp.FeedParserDict]:
+def search_worker(url_packet: Tuple[str, str]) -> List[fp.FeedParserDict]:
     """
     Used by run_search to get back search results for a single rss feed url.
     Adapted from FPIntegration._searchworker.  SQLite doesn't allow threads to
     share database connections, so each thread has to open its own connection
 
-    :param url: rss feed url
+    :param url_packet: Tuple of the string to a database file and an rss feed url
     :return:
     """
-    with Database() as db:
+    database, url = url_packet
+    with Database(database) as db:
         old_hits = db.get_hits(url)
     new_hits = [entry for entry in fp.parse(url).entries
                 if entry['id'] not in old_hits]
@@ -241,13 +242,13 @@ def search_worker(url) -> List[fp.FeedParserDict]:
         for hit in new_hits:
             hit['title'] = hit['title'].replace('&#x0024;', '$')
             hit_ids.append(hit['id'])
-        with Database() as db:
+        with Database(database) as db:
             db.update_hits(url, *hit_ids)
             db.update_time(url)
     return new_hits
 
 
-def run_search() -> List[fp.FeedParserDict]:
+def run_search(database: str=Config.database) -> List[fp.FeedParserDict]:
     """
     Runs the search, using multiprocessing.dummy.Pool.
     This runs faster than the sequential version but only because it's IO-bound,
@@ -255,8 +256,8 @@ def run_search() -> List[fp.FeedParserDict]:
 
     :return: list of FeedParserDicts
     """
-    with Database() as db:
-        urls = db.get_urls()
+    with Database(database) as db:
+        urls = [(database, url) for url in db.get_urls()]
     pool = ThreadPool(5)
     # Flatten the 2D list returned from pool.map
     hits = list(chain.from_iterable(pool.map(search_worker, urls)))

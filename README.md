@@ -1,4 +1,4 @@
-# CLSearch
+# Vehicular
 
 I like to ride motorcycles (Dualsports, to be specific) and it's well known that the 
 best place to look for a good deal on used bikes is craigslist.  In order to jump on
@@ -11,12 +11,12 @@ new matches.
 
 # Usage
 
-CLSearch runs in a custom shell that stores all the various search parameters.
+Vehicular runs in a custom shell that manages all the various search parameters.
 There are a lot of possible search parameters, inside the shell run `help` to view 
 all the commands. and `help <command>` to view help info for `<command>`.  Tab
 autocomplete works for commands that have specific options.
   
- Of all the parameters, only a few a required: `city`, `seller_type`,
+ Of all the parameters, only a few are required: `city`, `seller_type`,
 `vehicle_type` and `make_model`.
 
 * `city`
@@ -39,8 +39,14 @@ autocomplete works for commands that have specific options.
     
 All the other parameters are optional.
 
+After having selected the parameters, run `add_search`, which compiles the selected options into
+a RSS URL, which is stored in the database.  After having added the search, running `run_search`
+
 # Installation
 
-1. Download the repo
-1. Run `python setup.py`
+Install via `pip install vehicular`
+
+# License
+
+GPLv3, see LICENSE.txt
 

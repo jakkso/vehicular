@@ -13,16 +13,16 @@ from os import path
 import sys
 from typing import List
 
-from CLSearch.dicts import (CAR_SIZE,
-                            CAR_TYPE,
-                            CITIES,
-                            COLORS,
-                            CONDITION,
-                            CYLINDER_COUNT,
-                            DRIVETRAIN,
-                            FUEL_TYPES,
-                            TITLE_STATUS,
-                            TRANSMISSION)
+from vehicular.dicts import (CAR_SIZE,
+                             CAR_TYPE,
+                             CITIES,
+                             COLORS,
+                             CONDITION,
+                             CYLINDER_COUNT,
+                             DRIVETRAIN,
+                             FUEL_TYPES,
+                             TITLE_STATUS,
+                             TRANSMISSION)
 
 
 sys.modules['readline'] = gnureadline

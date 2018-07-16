@@ -1,6 +1,6 @@
 import unittest
 
-from tests.test_command import WetRunOrCommaFuckTheMan as Command
+from tests.integration_test import WetRunOrCommaFuckTheMan as Command
 from tests.test_database import TestDatabase
 
 if __name__ == '__main__':

@@ -4,14 +4,14 @@ Contains integration of cmd, database and message classes.
 import getpass
 import sqlite3
 
-from CLSearch.config import Config
-from CLSearch.database import Database, run_search
-from CLSearch.dicts import (BOOL_OPTIONS,
-                            CAR_SELLER,
-                            MOTO_SELLER)
-from CLSearch.message import Message
-from CLSearch.shell import CarShell, help_message
-from CLSearch.utilities import credential_validation as cv
+from vehicular.config import Config
+from vehicular.database import Database, run_search
+from vehicular.dicts import (BOOL_OPTIONS,
+                             CAR_SELLER,
+                             MOTO_SELLER)
+from vehicular.message import Message
+from vehicular.shell import CarShell, help_message
+from vehicular.utilities import credential_validation as cv
 
 
 class Run(CarShell):
@@ -23,7 +23,8 @@ class Run(CarShell):
     def __init__(self, database: str = Config.database):
         super(Run, self).__init__()
         self.seller_abbrev = None
-        self.database = Database(database)
+        self.db_file = database
+        self.database = Database(self.db_file)
         self.database.create_database()
 
     def create_seller_abbrev(self) -> None:
@@ -92,6 +93,19 @@ class Run(CarShell):
         usage = 'Input the credentials as directed', 'Be sure that they are correct'
         help_message(initial_desc, usage, long_desc=None)
 
+    @property
+    def credentials(self) -> bool:
+        """
+        Determines whether or not credentials have been set.  Returns True if they
+        have, False otherwise.
+        """
+        try:
+            username, password, recipient = self.database.credentials
+            if username and password and recipient:
+                return True
+        except TypeError:
+            return False
+
     def do_add_search(self, *args) -> None:
         """
         Adds search URL to database
@@ -119,7 +133,7 @@ class Run(CarShell):
             print('Ensure that credentials have been set successfully first.')
             return
         if user and password and recipient:
-            hits = run_search()
+            hits = run_search(self.db_file)
             if hits:
                 print('New hits found!')
                 Message(user, password, recipient, hits).send()
@@ -215,7 +229,3 @@ class Run(CarShell):
         initial = 'Used to print out the current searches'
         usage = 'Usage: type `print_searches`',
         help_message(initial, usage, long_desc=None)
-
-
-if __name__ == '__main__':
-    Run().cmdloop()

@@ -3,7 +3,7 @@ Contains utility functions
 """
 import smtplib
 
-from CLSearch.config import Config
+from vehicular.config import Config
 
 
 def credential_validation(user: str, pw: str) -> bool:

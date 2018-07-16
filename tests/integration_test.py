@@ -2,8 +2,8 @@ import os
 from time import time
 import unittest
 
-from CLSearch.command import Run
-from CLSearch.database import Database
+from vehicular.main import Run
+from vehicular.database import Database
 
 MAKES = ['harley davidson', 'gsxr', 'drz', 'cbr', 'klx', 'crf', 'triumph', 'sv650', 'Honda CB750', ' Honda XR650R',
          'KTM', 'Honda CR500', 'Suzuki GSXR 1000', 'Honda CBR600', 'BMW S1000RR', 'Aprilia RSV4',

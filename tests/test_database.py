@@ -2,7 +2,7 @@ import os
 import sqlite3
 import unittest
 
-from CLSearch.database import Database, FPIntegration
+from vehicular.database import Database, FPIntegration
 
 DB = 'test_db.db'
 URL = 'google.com'
