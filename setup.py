@@ -6,7 +6,7 @@ with open('README.md') as file:
 requirements = 'feedparser', 'jinja2', 'gnureadline'
 setuptools.setup(
     name='vehicular',
-    version='0.1.1',
+    version='0.1.0',
     author='Alexander Potts',
     author_email='alexander.potts@gmail.com',
     description='a craigslist vehicle search cli app',

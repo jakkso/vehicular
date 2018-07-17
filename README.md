@@ -4,8 +4,8 @@ I like to ride motorcycles (Dualsports, to be specific) and it's well known that
 best place to look for a good deal on used bikes is craigslist.  In order to jump on
 a deal, you've got to constantly troll craigslist for new posts.  
 
-However, I like to automate things when I can, so I wrote this little CLI app to keep
-track of searches.  It uses [feedparser](https://github.com/kurtmckee/feedparser) to 
+However, I like to automate things when I can, so I wrote this little CLI app to 
+search for me.  It uses [feedparser](https://github.com/kurtmckee/feedparser) to 
 sort through craigslist rss feeds and sends you an email notification when it finds
 new matches.
 
@@ -14,7 +14,8 @@ new matches.
 Vehicular runs in a custom shell that manages all the various search parameters.
 There are a lot of possible search parameters, inside the shell run `help` to view 
 all the commands. and `help <command>` to view help info for `<command>`.  Tab
-autocomplete works for commands that have specific options.
+autocomplete works for commands that have specific options.  Using it is encouraged as
+incorrectly typed parameters will fail as invalid.
   
  Of all the parameters, only a few are required: `city`, `seller_type`,
 `vehicle_type` and `make_model`.
@@ -40,7 +41,8 @@ autocomplete works for commands that have specific options.
 All the other parameters are optional.
 
 After having selected the parameters, run `add_search`, which compiles the selected options into
-a RSS URL, which is stored in the database.  After having added the search, running `run_search`
+an RSS URL, which is stored in the database.  After having added the search, running 
+`run_search` will parse the searches and send an email notification if matches are found.
 
 # Installation
 
